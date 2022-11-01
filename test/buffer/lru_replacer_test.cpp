@@ -19,10 +19,10 @@
 
 namespace bustub {
 
-TEST(LRUReplacerTest, DISABLED_SampleTest) {
+TEST(LRUReplacerTest, SampleTest) {
   LRUReplacer lru_replacer(7);
 
-  // Scenario: unpin six elements, i.e. add them to the replacer.
+  // Scenario: unpin six elements, i.e. add them to the replacer.   加入到 lru
   lru_replacer.Unpin(1);
   lru_replacer.Unpin(2);
   lru_replacer.Unpin(3);
@@ -32,7 +32,7 @@ TEST(LRUReplacerTest, DISABLED_SampleTest) {
   lru_replacer.Unpin(1);
   EXPECT_EQ(6, lru_replacer.Size());
 
-  // Scenario: get three victims from the lru.
+  // Scenario: get three victims from the lru.   牺牲3个
   int value;
   lru_replacer.Victim(&value);
   EXPECT_EQ(1, value);
@@ -42,16 +42,16 @@ TEST(LRUReplacerTest, DISABLED_SampleTest) {
   EXPECT_EQ(3, value);
 
   // Scenario: pin elements in the replacer.
-  // Note that 3 has already been victimized, so pinning 3 should have no effect.
+  // Note that 3 has already been victimized, so pinning 3 should have no effect.  //删除
   lru_replacer.Pin(3);
   lru_replacer.Pin(4);
   EXPECT_EQ(2, lru_replacer.Size());
 
   // Scenario: unpin 4. We expect that the reference bit of 4 will be set to 1.
-  lru_replacer.Unpin(4);
+  lru_replacer.Unpin(4);                                         //再次加入
 
   // Scenario: continue looking for victims. We expect these victims.
-  lru_replacer.Victim(&value);
+  lru_replacer.Victim(&value);                       //牺牲掉
   EXPECT_EQ(5, value);
   lru_replacer.Victim(&value);
   EXPECT_EQ(6, value);

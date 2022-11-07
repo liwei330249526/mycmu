@@ -102,14 +102,14 @@ class BufferPoolManager {
   }
 
   /**
-   * Fetch the requested page from the buffer pool.
+   * Fetch the requested page from the buffer pool.    获取一个页
    * @param page_id id of page to be fetched
    * @return the requested page
    */
   virtual auto FetchPgImp(page_id_t page_id) -> Page * = 0;
 
   /**
-   * Unpin the target page from the buffer pool.
+   * Unpin the target page from the buffer pool.        unpin buffer pool 的页, 即不使用了,  告诉它, 也是不是脏的
    * @param page_id id of page to be unpinned
    * @param is_dirty true if the page should be marked as dirty, false otherwise
    * @return false if the page pin count is <= 0 before this call, true otherwise
@@ -117,28 +117,28 @@ class BufferPoolManager {
   virtual auto UnpinPgImp(page_id_t page_id, bool is_dirty) -> bool = 0;
 
   /**
-   * Flushes the target page to disk.
+   * Flushes the target page to disk.                 刷页到磁盘
    * @param page_id id of page to be flushed, cannot be INVALID_PAGE_ID
    * @return false if the page could not be found in the page table, true otherwise
    */
   virtual auto FlushPgImp(page_id_t page_id) -> bool = 0;
 
   /**
-   * Creates a new page in the buffer pool.
+   * Creates a new page in the buffer pool.           创建新的页
    * @param[out] page_id id of created page
    * @return nullptr if no new pages could be created, otherwise pointer to new page
    */
   virtual auto NewPgImp(page_id_t *page_id) -> Page * = 0;
 
   /**
-   * Deletes a page from the buffer pool.
+   * Deletes a page from the buffer pool.             从bufferpool 删除页
    * @param page_id id of page to be deleted
    * @return false if the page exists but could not be deleted, true if the page didn't exist or deletion succeeded
    */
   virtual auto DeletePgImp(page_id_t page_id) -> bool = 0;
 
   /**
-   * Flushes all the pages in the buffer pool to disk.
+   * Flushes all the pages in the buffer pool to disk.       刷所有页到磁盘
    */
   virtual void FlushAllPgsImp() = 0;
 };

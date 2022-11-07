@@ -29,6 +29,7 @@ namespace bustub {
 
 /**
  * ExtendibleHashTable implements a hash table using the extendible hashing algorithm.
+ * 使用扩展hash算法, 实现hash表
  * @tparam K key type
  * @tparam V value type
  */
@@ -39,26 +40,26 @@ class ExtendibleHashTable : public HashTable<K, V> {
    *
    * TODO(P1): Add implementation
    *
-   * @brief Create a new ExtendibleHashTable.
+   * @brief Create a new ExtendibleHashTable.   创建
    * @param bucket_size: fixed size for each bucket
    */
   explicit ExtendibleHashTable(size_t bucket_size);
 
   /**
-   * @brief Get the global depth of the directory.
+   * @brief Get the global depth of the directory.  深度
    * @return The global depth of the directory.
    */
   auto GetGlobalDepth() const -> int;
 
   /**
-   * @brief Get the local depth of the bucket that the given directory index points to.
+   * @brief Get the local depth of the bucket that the given directory index points to.  本地深度
    * @param dir_index The index in the directory.
    * @return The local depth of the bucket.
    */
   auto GetLocalDepth(int dir_index) const -> int;
 
   /**
-   * @brief Get the number of buckets in the directory.
+   * @brief Get the number of buckets in the directory.   bucket数量
    * @return The number of buckets in the directory.
    */
   auto GetNumBuckets() const -> int;
@@ -67,7 +68,7 @@ class ExtendibleHashTable : public HashTable<K, V> {
    *
    * TODO(P1): Add implementation
    *
-   * @brief Find the value associated with the given key.
+   * @brief Find the value associated with the given key.  获取值
    *
    * Use IndexOf(key) to find the directory index the key hashes to.
    *
@@ -81,7 +82,7 @@ class ExtendibleHashTable : public HashTable<K, V> {
    *
    * TODO(P1): Add implementation
    *
-   * @brief Insert the given key-value pair into the hash table.
+   * @brief Insert the given key-value pair into the hash table.   插入
    * If a key already exists, the value should be updated.
    * If the bucket is full and can't be inserted, do the following steps before retrying:
    *    1. If the local depth of the bucket is equal to the global depth,
@@ -98,7 +99,7 @@ class ExtendibleHashTable : public HashTable<K, V> {
    *
    * TODO(P1): Add implementation
    *
-   * @brief Given the key, remove the corresponding key-value pair in the hash table.
+   * @brief Given the key, remove the corresponding key-value pair in the hash table.  删除
    * Shrink & Combination is not required for this project
    * @param key The key to be deleted.
    * @return True if the key exists, false otherwise.
@@ -106,7 +107,7 @@ class ExtendibleHashTable : public HashTable<K, V> {
   auto Remove(const K &key) -> bool override;
 
   /**
-   * Bucket class for each hash table bucket that the directory points to.
+   * Bucket class for each hash table bucket that the directory points to.   目录指向
    */
   class Bucket {
    public:
@@ -127,7 +128,7 @@ class ExtendibleHashTable : public HashTable<K, V> {
      *
      * TODO(P1): Add implementation
      *
-     * @brief Find the value associated with the given key in the bucket.
+     * @brief Find the value associated with the given key in the bucket.   找到这个key的value
      * @param key The key to be searched.
      * @param[out] value The value associated with the key.
      * @return True if the key is found, false otherwise.
@@ -149,13 +150,19 @@ class ExtendibleHashTable : public HashTable<K, V> {
      * TODO(P1): Add implementation
      *
      * @brief Insert the given key-value pair into the bucket.
-     *      1. If a key already exists, the value should be updated.
-     *      2. If the bucket is full, do nothing and return false.
+     *      1. If a key already exists, the value should be updated.   如果值存在, 则更新
+     *      2. If the bucket is full, do nothing and return false.     如果满了, 则false
      * @param key The key to be inserted.
      * @param value The value to be inserted.
      * @return True if the key-value pair is inserted, false otherwise.
      */
     auto Insert(const K &key, const V &value) -> bool;
+
+    auto IndexV(const K &key) -> size_t ;
+
+    auto GetTwoIndexByDepth(const K &key, int depth , int &id0, int &id1) -> void;
+
+    auto PrintData() -> void;
 
    private:
     // TODO(student): You may add additional private members and helper functions
@@ -164,23 +171,26 @@ class ExtendibleHashTable : public HashTable<K, V> {
     std::list<std::pair<K, V>> list_;
   };
 
+  auto GetDir() -> std::vector<std::shared_ptr<Bucket>> {
+    return dir_;
+  }
+
  private:
   // TODO(student): You may add additional private members and helper functions and remove the ones
   // you don't need.
-
-  int global_depth_;    // The global depth of the directory
-  size_t bucket_size_;  // The size of a bucket
-  int num_buckets_;     // The number of buckets in the hash table
+  int global_depth_;    // The global depth of the directory   全局深度
+  size_t bucket_size_;  // The size of a bucket                bucket大小
+  int num_buckets_;     // The number of buckets in the hash table  输血量
   mutable std::mutex latch_;
-  std::vector<std::shared_ptr<Bucket>> dir_;  // The directory of the hash table
+  std::vector<std::shared_ptr<Bucket>> dir_;  // The directory of the hash table 目录
 
   // The following functions are completely optional, you can delete them if you have your own ideas.
 
   /**
-   * @brief Redistribute the kv pairs in a full bucket.
+   * @brief Redistribute the kv pairs in a full bucket.        重分发kv
    * @param bucket The bucket to be redistributed.
    */
-  auto RedistributeBucket(std::shared_ptr<Bucket> bucket) -> void;
+  auto RedistributeBucket(std::shared_ptr<Bucket> bucket, size_t dirId) -> void;
 
   /*****************************************************************
    * Must acquire latch_ first before calling the below functions. *
@@ -189,7 +199,7 @@ class ExtendibleHashTable : public HashTable<K, V> {
   /**
    * @brief For the given key, return the entry index in the directory where the key hashes to.
    * @param key The key to be hashed.
-   * @return The entry index in the directory.
+   * @return The entry index in the directory.    dir 的index
    */
   auto IndexOf(const K &key) -> size_t;
 

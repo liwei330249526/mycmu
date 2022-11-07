@@ -17,11 +17,22 @@
 #include <mutex>  // NOLINT
 #include <unordered_map>
 #include <vector>
+#include <memory>
+#include <map>
+#include <iostream>
 
 #include "common/config.h"
 #include "common/macros.h"
 
 namespace bustub {
+
+//#define TRACE       //debug
+#ifndef TRACE
+ #define tcout 0 && cout//或者NULL && cout
+#else
+ #define tcout cout
+#endif
+
 
 /**
  * LRUKReplacer implements the LRU-k replacement policy.
@@ -123,6 +134,8 @@ class LRUKReplacer {
    */
   void Remove(frame_id_t frame_id);
 
+  void MyPrintData();
+
   /**
    * TODO(P1): Add implementation
    *
@@ -132,13 +145,33 @@ class LRUKReplacer {
    */
   auto Size() -> size_t;
 
+  class Node { 
+   public:
+    explicit Node(frame_id_t frid, size_t times, bool evtable);
+
+    frame_id_t frid_;
+    size_t times_;
+    bool isEvictable_;
+  };
+  
+
  private:
   // TODO(student): implement me! You can replace these member variables as you like.
   // Remove maybe_unused if you start using them.
+  /*
   [[maybe_unused]] size_t current_timestamp_{0};
   [[maybe_unused]] size_t curr_size_{0};
   [[maybe_unused]] size_t replacer_size_;
-  [[maybe_unused]] size_t k_;
+  */
+  size_t replacer_size_;
+  size_t k_;
+  std::list<frame_id_t> list1_;
+  std::map<frame_id_t, std::shared_ptr<Node>> cache1_;
+  size_t size_victable1_;
+  
+  std::list<frame_id_t> list2_;
+  std::map<frame_id_t, std::shared_ptr<Node>> cache2_;
+  size_t size_victable2_;
   std::mutex latch_;
 };
 

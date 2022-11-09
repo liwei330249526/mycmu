@@ -11,11 +11,18 @@
 //===----------------------------------------------------------------------===//
 
 #include "buffer/lru_k_replacer.h"
+#include <iostream>
 
 using namespace std;
 
 namespace bustub {
 
+//#define TRACE       //debug
+#ifndef TRACE
+ #define tcout 0 && cout//或者NULL && cout
+#else
+ #define tcout cout
+#endif
 
 LRUKReplacer::LRUKReplacer(size_t num_frames, size_t k) : replacer_size_(num_frames), k_(k), 
                             size_victable1_(0), size_victable2_(0) {}
@@ -30,14 +37,16 @@ auto LRUKReplacer::Evict(frame_id_t *frame_id) -> bool {
     // 1 优先驱逐list1
     if (this->size_victable1_ != 0) {
         //2 倒序遍历链表list1_, 找到第一个可驱逐的, 并驱逐
-        for (auto it = this->list1_.rbegin(); it != this->list1_.rend(); it++) {        // 反向遍历删除第一个遇到的符合的节点
+        for (auto it = this->list1_.rbegin(); it != this->list1_.rend(); ) {        // 反向遍历删除第一个遇到的符合的节点
             frame_id_t fid = *it;
             *frame_id = fid;
 
             if (this->cache1_[fid]->isEvictable_) {
-                it = std::list<frame_id_t>::reverse_iterator(this->list1_.erase((++it).base()));
+                it = std::list<frame_id_t>::reverse_iterator(this->list1_.erase((++it).base()));   //如果继续的话, 则it已经指向的下一个对象, 无需再次it++
                 this->cache1_.erase(fid);
                 break;
+            } else {
+                it++;
             }
         }
         this->size_victable1_--;
@@ -45,13 +54,15 @@ auto LRUKReplacer::Evict(frame_id_t *frame_id) -> bool {
 
     } else if (this->size_victable2_ != 0) {
         // 2 驱逐list2
-        for (auto it = this->list2_.rbegin(); it != this->list2_.rend(); it++) {
+        for (auto it = this->list2_.rbegin(); it != this->list2_.rend(); ) {
             frame_id_t fid = *it;
             *frame_id = fid;
             if (this->cache2_[fid]->isEvictable_) {
                 it = std::list<frame_id_t>::reverse_iterator(this->list2_.erase((++it).base()));
                 this->cache2_.erase(fid);
                 break;
+            } else {
+                it++;
             }
         }
 

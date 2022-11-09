@@ -26,13 +26,6 @@
 
 namespace bustub {
 
-//#define TRACE       //debug
-#ifndef TRACE
- #define tcout 0 && cout//或者NULL && cout
-#else
- #define tcout cout
-#endif
-
 
 /**
  * LRUKReplacer implements the LRU-k replacement policy.

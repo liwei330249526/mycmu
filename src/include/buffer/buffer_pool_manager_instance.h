@@ -51,6 +51,7 @@ class BufferPoolManagerInstance : public BufferPoolManager {
 
   /** @brief Return the pointer to all the pages in the buffer pool. */
   auto GetPages() -> Page * { return pages_; }
+  void MyPrintData();
 
  protected:
   /**
@@ -136,7 +137,7 @@ class BufferPoolManagerInstance : public BufferPoolManager {
    * After deleting the page from the page table, stop tracking the frame in the replacer and add the frame
    * back to the free list. Also, reset the page's memory and metadata. Finally, you should call DeallocatePage() to
    * imitate freeing the page on the disk.
-   *
+   *从pagetable删除后, 停止跟踪帧在lru上和 加入在freelist上.  重置元数据.  最后调用 DeallocatePage 去free这个页
    * @param page_id id of page to be deleted
    * @return false if the page exists but could not be deleted, true if the page didn't exist or deletion succeeded
    */
@@ -152,15 +153,16 @@ class BufferPoolManagerInstance : public BufferPoolManager {
   /** Array of buffer pool pages. buffpool的页数组 */
   Page *pages_;
   /** Pointer to the disk manager. diskmanager指针 */
-  DiskManager *disk_manager_ __attribute__((__unused__));
+  DiskManager *disk_manager_;
   /** Pointer to the log manager. Please ignore this for P1. 指向logmanager */
-  LogManager *log_manager_ __attribute__((__unused__));
-  /** Page table for keeping track of buffer pool pages. page table 跟踪buffpoo 的页 */
+  LogManager *log_manager_ ;
+  /** Page table for keeping track of buffer pool pages. page table 跟踪buffpool 的页 */
   ExtendibleHashTable<page_id_t, frame_id_t> *page_table_;
   /** Replacer to find unpinned pages for replacement. lru */
   LRUKReplacer *replacer_;
   /** List of free frames that don't have any pages on them. free frames, 没有页在上面的 */
   std::list<frame_id_t> free_list_;
+  std::list<page_id_t> free_pageid_;
   /** This latch protects shared data structures. We recommend updating this comment to describe what it protects. latch */
   std::mutex latch_;
 
@@ -174,9 +176,8 @@ class BufferPoolManagerInstance : public BufferPoolManager {
    * @brief Deallocate a page on disk. Caller should acquire the latch before calling this function.   解除分配页
    * @param page_id id of the page to deallocate
    */
-  void DeallocatePage(__attribute__((unused)) page_id_t page_id) {
+  void DeallocatePage(page_id_t page_id);
     // This is a no-nop right now without a more complex data structure to track deallocated pages
-  }
 
   // TODO(student): You may add additional private members and helper functions
 };

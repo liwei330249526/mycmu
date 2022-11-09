@@ -23,7 +23,7 @@ namespace bustub {
 
 // NOLINTNEXTLINE
 // Check whether pages containing terminal characters can be recovered
-TEST(BufferPoolManagerInstanceTest, DISABLED_BinaryDataTest) {
+TEST(BufferPoolManagerInstanceTest, BinaryDataTest) {
   const std::string db_name = "test.db";
   const size_t buffer_pool_size = 10;
   const size_t k = 5;
@@ -75,8 +75,12 @@ TEST(BufferPoolManagerInstanceTest, DISABLED_BinaryDataTest) {
     EXPECT_NE(nullptr, bpm->NewPage(&page_id_temp));
     bpm->UnpinPage(page_id_temp, false);
   }
+
+  bpm->MyPrintData();
   // Scenario: We should be able to fetch the data we wrote a while ago.       能够取数据, 之前写的
   page0 = bpm->FetchPage(0);
+  bpm->MyPrintData();
+
   EXPECT_EQ(0, memcmp(page0->GetData(), random_binary_data, BUSTUB_PAGE_SIZE));
   EXPECT_EQ(true, bpm->UnpinPage(0, true));
 
@@ -89,7 +93,7 @@ TEST(BufferPoolManagerInstanceTest, DISABLED_BinaryDataTest) {
 }
 
 // NOLINTNEXTLINE
-TEST(BufferPoolManagerInstanceTest, DISABLED_SampleTest) {
+TEST(BufferPoolManagerInstanceTest, SampleTest) {
   const std::string db_name = "test.db";
   const size_t buffer_pool_size = 10;
   const size_t k = 5;
@@ -127,13 +131,16 @@ TEST(BufferPoolManagerInstanceTest, DISABLED_SampleTest) {
     EXPECT_NE(nullptr, bpm->NewPage(&page_id_temp));
   }
 
+  bpm->MyPrintData();
   // Scenario: We should be able to fetch the data we wrote a while ago.           取数据
   page0 = bpm->FetchPage(0);
   EXPECT_EQ(0, strcmp(page0->GetData(), "Hello"));
-
+  bpm->MyPrintData();
   // Scenario: If we unpin page 0 and then make a new page, all the buffer pages should
   // now be pinned. Fetching page 0 should fail.                                    不钉0页, 创建新页, 获取0, 为null
+
   EXPECT_EQ(true, bpm->UnpinPage(0, true));
+  bpm->MyPrintData();
   EXPECT_NE(nullptr, bpm->NewPage(&page_id_temp));
   EXPECT_EQ(nullptr, bpm->FetchPage(0));
 

@@ -21,7 +21,7 @@
 namespace bustub {
 
 TEST(BPlusTreeTests, DISABLED_InsertTest1) {
-  // create KeyComparator and index schema
+  // create KeyComparator and index schema  创建key比较器,和索引schema
   auto key_schema = ParseCreateStatement("a bigint");
   GenericComparator<8> comparator(key_schema.get());
 
@@ -44,12 +44,12 @@ TEST(BPlusTreeTests, DISABLED_InsertTest1) {
   int64_t value = key & 0xFFFFFFFF;
   rid.Set(static_cast<int32_t>(key), value);
   index_key.SetFromInteger(key);
-  tree.Insert(index_key, rid, transaction);
+  tree.Insert(index_key, rid, transaction);         //插入kv
 
-  auto root_page_id = tree.GetRootPageId();
-  auto root_page = reinterpret_cast<BPlusTreePage *>(bpm->FetchPage(root_page_id)->GetData());
+  auto root_page_id = tree.GetRootPageId();         //root pageid
+  auto root_page = reinterpret_cast<BPlusTreePage *>(bpm->FetchPage(root_page_id)->GetData());   //获取page
   ASSERT_NE(root_page, nullptr);
-  ASSERT_TRUE(root_page->IsLeafPage());
+  ASSERT_TRUE(root_page->IsLeafPage());             //page是leaf page
 
   auto root_as_leaf = reinterpret_cast<BPlusTreeLeafPage<GenericKey<8>, RID, GenericComparator<8>> *>(root_page);
   ASSERT_EQ(root_as_leaf->GetSize(), 1);

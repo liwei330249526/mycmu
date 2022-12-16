@@ -262,12 +262,9 @@ auto BufferPoolManagerInstance::AllocatePage() -> page_id_t {
   return ret; 
 }
 
-// 将此id 返回来
+// 将此id 还回来
 void BufferPoolManagerInstance::DeallocatePage(page_id_t page_id) {
   this->free_pageid_.push_back(page_id);
   return;
 }
-
-
-
 }  // namespace bustub

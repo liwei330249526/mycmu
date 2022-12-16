@@ -17,9 +17,9 @@
 
 namespace bustub {
 
-#define B_PLUS_TREE_LEAF_PAGE_TYPE BPlusTreeLeafPage<KeyType, ValueType, KeyComparator>
+#define B_PLUS_TREE_LEAF_PAGE_TYPE BPlusTreeLeafPage<KeyType, ValueType, KeyComparator>    // 叶子页类型
 #define LEAF_PAGE_HEADER_SIZE 28
-#define LEAF_PAGE_SIZE ((BUSTUB_PAGE_SIZE - LEAF_PAGE_HEADER_SIZE) / sizeof(MappingType))
+#define LEAF_PAGE_SIZE ((BUSTUB_PAGE_SIZE - LEAF_PAGE_HEADER_SIZE) / sizeof(MappingType))  // 一个叶子页存多少个数据
 
 /**
  * Store indexed key and record id(record id = page id combined with slot id,
@@ -50,9 +50,29 @@ class BPlusTreeLeafPage : public BPlusTreePage {
   void SetNextPageId(page_id_t next_page_id);
   auto KeyAt(int index) const -> KeyType;
 
+  auto IndexByKey(KeyType key, KeyComparator &kcomparator) -> int;
+
+  auto IndexByVal(ValueType val) -> int;
+
+  auto Insert(KeyType key, ValueType value, KeyComparator &kcomparator) -> int ;
+
+  auto Remove(KeyType key, KeyComparator &kcomparator) -> int ;
+
+  void InsertElemLast(MappingType elem);
+
+  void MoveOutRightHalf(BPlusTreeLeafPage *to);
+
+  void MoveInLeftHalf(MappingType *array, int start, int count);
+
+  auto GetValByKey(KeyType key, ValueType &value, KeyComparator &kcomparator) -> bool;
+
+  auto ItemAt(int index) const -> const MappingType &;
+  auto ValueAt(int index) const -> ValueType;
+
  private:
   page_id_t next_page_id_;
   // Flexible array member for page data.
+  //灵活数组成员 for 页数据
   MappingType array_[1];
 };
 }  // namespace bustub

@@ -24,6 +24,7 @@ class IndexIterator {
  public:
   // you may define your own constructor based on your member variables
   IndexIterator();
+  IndexIterator(int index, Page *page, BufferPoolManager *bpm);
   ~IndexIterator();  // NOLINT
 
   auto IsEnd() -> bool;
@@ -38,6 +39,10 @@ class IndexIterator {
 
  private:
   // add your own private member variables here
+  int index_;                // 本节点的第多少个?
+  Page *page_;
+  B_PLUS_TREE_LEAF_PAGE_TYPE *bptLeafPage_;       // 模板类leaf page 的对象指针
+  BufferPoolManager *buffer_pool_manager_;
 };
 
 }  // namespace bustub

@@ -35,8 +35,8 @@ namespace bustub {
  */
 INDEX_TEMPLATE_ARGUMENTS
 class BPlusTree {
-  using InternalPage = BPlusTreeInternalPage<KeyType, page_id_t, KeyComparator>;
-  using LeafPage = BPlusTreeLeafPage<KeyType, ValueType, KeyComparator>;
+  using InternalPage = BPlusTreeInternalPage<KeyType, page_id_t, KeyComparator>;      // internal 中是 pageid
+  using LeafPage = BPlusTreeLeafPage<KeyType, ValueType, KeyComparator>;              //leaf 中是 vlauetype, 应该是RID
 
  public:
   explicit BPlusTree(std::string name, BufferPoolManager *buffer_pool_manager, const KeyComparator &comparator,
@@ -56,6 +56,22 @@ class BPlusTree {
 
   // return the page id of the root node
   auto GetRootPageId() -> page_id_t;
+
+  void SplitInternalNode(InternalPage *bptPage);
+
+  void SplitLeafNode(LeafPage *bptPage);
+
+  auto StealLeafBrother(LeafPage *leafPage) -> bool;
+
+  auto StealInternalBrother(InternalPage *internalPage) -> bool ;
+
+  void MergeLeafNode(LeafPage *leafPage);
+
+  void MergeInternalNode(InternalPage *internalPage);
+
+  auto FindLeftMostLeftLeafPage() -> Page*;
+
+  auto FindLeafPageByKey(KeyType key) -> Page*;
 
   // index iterator
   auto Begin() -> INDEXITERATOR_TYPE;

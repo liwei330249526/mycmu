@@ -71,64 +71,62 @@ auto BPLUSTREE_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *result
 */
 INDEX_TEMPLATE_ARGUMENTS
 void BPLUSTREE_TYPE::SplitInternalNode(InternalPage *bptPage) {
-    if (bptPage->GetSize() != bptPage->GetMaxSize()) {
+    if (bptPage->GetSize() != bptPage->GetMaxSize()) {                    // 如果无需分裂, 则返回
       this->buffer_pool_manager_->UnpinPage(bptPage->GetPageId(), true);
       return;
     }
 
     page_id_t newPageId;
     Page *newPage;
-    newPage = this->buffer_pool_manager_->NewPage(&newPageId);                        // 1 创建新节点页; 右节点
     InternalPage *rightInternalPage;
 
-    InternalPage *leftInternalPage =  bptPage;
+    newPage = this->buffer_pool_manager_->NewPage(&newPageId);                         // 1 创建新节点页; 右节点
     rightInternalPage = reinterpret_cast<InternalPage *>(newPage->GetData());
     rightInternalPage->Init(newPageId, bptPage->GetParentPageId(), bptPage->GetMaxSize());
-                                                                                      // 2 将 leftInternalPage 的右边部分加入到 rightInternalPage
-    bptPage->MoveOutRightHalf(rightInternalPage);
-    KeyType rightMin = rightInternalPage->ItemAt(0).first;                             // [0],没有key, [1]右边节点最小 key
+                                                                                      
+    bptPage->MoveOutRightHalf(rightInternalPage);                                     // 2 将 leftInternalPage 的右边部分加入到 rightInternalPage
+    for (int i = 0; i < rightInternalPage->GetSize(); i++) {                          // 3 遍历右节点, 将其所有子节点的父节点设置为新的右节点id
+      Page *childPage = this->buffer_pool_manager_->FetchPage(rightInternalPage->ItemAt(i).second);
+      BPlusTreePage *btChildPage = reinterpret_cast<BPlusTreePage *>(childPage);
+      btChildPage->SetParentPageId(rightInternalPage->GetPageId());
+      this->buffer_pool_manager_->UnpinPage(btChildPage->GetPageId(), true);
+    }
+
+    KeyType rightMin = rightInternalPage->ItemAt(0).first;    // [0],没有key, [1]右边节点最小 key
 
     // 如果没有父节点, 即本身是root 节点
     Page *parentPage;
     page_id_t parentId;
     InternalPage *parentInternalPage;
     if (bptPage->IsRootPage(this->GetRootPageId())) {
-      parentPage = this->buffer_pool_manager_->NewPage(&parentId);                    // 3 创建父节点
+      parentPage = this->buffer_pool_manager_->NewPage(&parentId);                    // 4 创建父节点
       parentInternalPage = reinterpret_cast <InternalPage *>(parentPage->GetData());
 
-      bptPage->SetParentPageId(parentId);
+      bptPage->SetParentPageId(parentId);                       // 左右子节点向上指针
       rightInternalPage->SetParentPageId(parentId);
 
-      parentInternalPage->Insert(KeyType{}, bptPage->GetPageId(), this->comparator_);                    // 4 创建了心的父节点, 插入左右孩子节点
+      parentInternalPage->InsertFisrtNullKey(bptPage->GetPageId());     // 5 创建了心的父节点, 插入左右孩子节点
       parentInternalPage->Insert(rightMin, rightInternalPage->GetPageId(), this->comparator_);
 
-      //rightInternalPage->Remove(rightMin);                                            // 5 内部节点, 分裂, 右节点的最小值移动到父节点, 查询的不查这key即可, 无需操作
+      //rightInternalPage->Remove(rightMin);    // 内部节点, 分裂, 右节点的最小值移动到父节点, 查询的不查这key即可, 无需操作
 
       this->root_page_id_ = parentId;
       this->UpdateRootPageId(0);
     } else {
-      parentPage = this->buffer_pool_manager_->FetchPage(bptPage->GetParentPageId());    // 3 获取父节点页
+      parentPage = this->buffer_pool_manager_->FetchPage(bptPage->GetParentPageId());    // 4 获取父节点页
       InternalPage *parentInternalPage = reinterpret_cast <InternalPage *>(parentPage->GetData());
-      parentInternalPage->Insert(rightMin, rightInternalPage->GetPageId(), this->comparator_);           // 4  内部页, 新建右节点的首个KV移动到父节点
+
+      rightInternalPage->SetParentPageId(parentId);         // 右子节点向上指针
+
+      parentInternalPage->Insert(rightMin, rightInternalPage->GetPageId(), this->comparator_); // 5  内部页, 新建右节点的首个KV移动到父节点
       
-      //rightInternalPage->SetKeyAt(0, KeyType{});                                        // 5 内部节点, 分裂, 右节点的最小值移动到父节点, 右节点第一个key 设置为空, 但有val 为指向一个子节点的page
+      //rightInternalPage->SetKeyAt(0, KeyType{});        //  内部节点, 分裂, 右节点的最小值移动到父节点, 右节点第一个key 设置为空, 但有val 为指向一个子节点的page
     }
 
-    for (int i = 0; i < rightInternalPage->GetSize(); i++) {                         // 6 遍历右节点, 将其所有子节点的父节点设置为新的右节点id
-      Page *childPage = this->buffer_pool_manager_->FetchPage(rightInternalPage->ItemAt(i).second);
-      if (!bptPage->IsInternalPage()) {
-        InternalPage *childInternalPage = reinterpret_cast <InternalPage *>(childPage->GetData());
-        childInternalPage->SetParentPageId(rightInternalPage->GetPageId());
-      } else {
-        LeafPage *childLeafPage = reinterpret_cast <LeafPage *>(childPage->GetData());
-        childLeafPage->SetParentPageId(rightInternalPage->GetPageId());
-      }
-      this->buffer_pool_manager_->UnpinPage(childPage->GetPageId(), true);
-    }
-
-    this->buffer_pool_manager_->UnpinPage(leftInternalPage->GetPageId(), true);
+  
+    this->buffer_pool_manager_->UnpinPage(bptPage->GetPageId(), true);                    // 释放3个页
     this->buffer_pool_manager_->UnpinPage(rightInternalPage->GetPageId(), true);
-    this->buffer_pool_manager_->UnpinPage(parentInternalPage->GetPageId(), true);
+    //this->buffer_pool_manager_->UnpinPage(parentInternalPage->GetPageId(), true);       // 父节点不能释放, 刚才给父节点插入了key, 要递归看父节点是否需要分裂
 
     this->SplitInternalNode(parentInternalPage);
     return;
@@ -150,20 +148,17 @@ void BPLUSTREE_TYPE::SplitLeafNode(LeafPage *bptPage) {
     Page *newPage;
     newPage = this->buffer_pool_manager_->NewPage(&newPageId);                        // 1 创建新节点页; 右节点 rightLeafPage
 
-    LeafPage *leftLeafPage = bptPage;
     LeafPage *rightLeafPage;
     rightLeafPage = reinterpret_cast <LeafPage *>(newPage->GetData());
     rightLeafPage->Init(newPageId, bptPage->GetParentPageId(), bptPage->GetMaxSize());
-                                                                                      // 2 将 leftLeafPage 右边部分加入到 rightLeafPage   
-    for (int i = leftLeafPage->GetSize() / 2; i < leftLeafPage->GetSize() ; i++) {
-      rightLeafPage->Insert(leftLeafPage->ItemAt(i).first, leftLeafPage->ItemAt(i).second, this->comparator_); 
-      leftLeafPage->Remove(leftLeafPage->ItemAt(i).first, this->comparator_);
-    }
-    KeyType rightMin = rightLeafPage->ItemAt(0).first;                              // 右节点最小key
+                                                                                        
+    bptPage->MoveOutRightHalf(rightLeafPage);                                        // 2 将 leftPage 右边部分加入到 rightLeafPage 
+
+    KeyType rightMin = rightLeafPage->ItemAt(0).first;    // 右节点最小key
 
   
-    rightLeafPage->SetNextPageId(leftLeafPage->GetNextPageId());                    // 3  设置 right 节点的 next 节点id 为原left 的next id
-    leftLeafPage->SetNextPageId(rightLeafPage->GetPageId());                        // 设置 left  节点的 next 节点id 为 right 节点的 id
+    rightLeafPage->SetNextPageId(bptPage->GetNextPageId());                    // 3  设置 right 节点的 next 节点id 为原left 的next id
+    bptPage->SetNextPageId(rightLeafPage->GetPageId());                        // 设置 left  节点的 next 节点id 为 right 节点的 id
 
 
     // 如果没有父节点, 即本身是 root 节点
@@ -173,20 +168,25 @@ void BPLUSTREE_TYPE::SplitLeafNode(LeafPage *bptPage) {
     if (bptPage->IsRootPage(this->GetRootPageId())) {
       parentPage = this->buffer_pool_manager_->NewPage(&parentId);                              // 4  新建父节点页
       InternalPage *parentInternalPage = reinterpret_cast <InternalPage *>(parentPage->GetData());
-      leftLeafPage->SetParentPageId(parentId);                                           // 设置父节点pageid
+
+      bptPage->SetParentPageId(parentId);                      // 设置父节点pageid, 向上指针
       rightLeafPage->SetParentPageId(parentId);
 
-      parentInternalPage->Insert(KeyType{}, bptPage->GetPageId(), this->comparator_);                  // 5 创建了心的父节点, 插入左右孩子节点
+      parentInternalPage->InsertFisrtNullKey(bptPage->GetPageId());         // 5 创建了心的父节点, 插入左右孩子节点
       parentInternalPage->Insert(rightMin, rightLeafPage->GetPageId(), this->comparator_);
+
       this->root_page_id_ = parentId;
       this->UpdateRootPageId(0);
       
     } else {
       parentPage = this->buffer_pool_manager_->FetchPage(this->GetRootPageId());                 // 4 获取父节点页
       InternalPage *parentInternalPage = reinterpret_cast <InternalPage *>(parentPage->GetData());
+
+      rightLeafPage->SetParentPageId(parentId);         // 设置向上指针
+
       parentInternalPage->Insert(rightMin, rightLeafPage->GetPageId(), this->comparator_);             // 5 叶子页, 新建的右侧节点的首个KV插入到父节点
     }
-    this->buffer_pool_manager_->UnpinPage(leftLeafPage->GetPageId(), true);
+    this->buffer_pool_manager_->UnpinPage(bptPage->GetPageId(), true);
     this->buffer_pool_manager_->UnpinPage(rightLeafPage->GetPageId(), true);
 
     this->SplitInternalNode(parentInternalPage);
@@ -241,56 +241,68 @@ auto BPLUSTREE_TYPE::Insert(const KeyType &key, const ValueType &value, Transact
 
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_TYPE::StealLeafBrother(LeafPage *leafPage) -> bool {
-  Page * parentPage = this->buffer_pool_manager_->FetchPage(leafPage->GetParentPageId());           // 1 获取父节点
-  InternalPage *parentInternalPage = reinterpret_cast <InternalPage *>(parentPage->GetData());
-  LeafPage *leftLeafPage;
-  LeafPage *rightLeafPage;
+auto BPLUSTREE_TYPE::StealInternalBrother(InternalPage *mePage) -> bool {
+  InternalPage *leftPage;
+  InternalPage *rightPage;
+  InternalPage *parentPage;
+  //BPlusTreePage *chidPage;
+  int index;
 
-  int index = 0;
-  KeyType zkey;
-  parentInternalPage->GetLastSmallerKey(leafPage->ItemAt(0).first, index, zkey,
-                                                  this->comparator_);   
-  //int index = parentInternalPage->IndexByKey(leafPage->ItemAt(0).first);                            // 2 获取本节点(叶子)第[0]个key在父节点的 index
-  // parentInternalPage 大小应该 >=2, (包括[0]的空key)
-  // 应该 (parentInternalPage->array_[index].first == leafPage->ItemAt(0).first)
+  parentPage = reinterpret_cast <InternalPage *>(this->buffer_pool_manager_->FetchPage(mePage->GetParentPageId())->GetData());           // 1 获取父节点
+  index = parentPage->IndexByVal(mePage->GetPageId());                               // 2 获取本节点(叶子)第[0]个key在父节点的 index
+  if (index == -1) {
+    printf("异常 StealLeafBrother");
+  } 
+  
+  //int index = parentPage->IndexByKey(mePage->ItemAt(0).first);                            
+  // parentPage 大小应该 >=2, (包括[0]的空key)
+  // 应该 (parentPage->array_[index].first == mePage->ItemAt(0).first)
 
   // 偷取左侧
-  if (this->comparator_(parentInternalPage->ItemAt(index).first, leafPage->ItemAt(0).first) == 0 ) {
-      leftLeafPage = reinterpret_cast<LeafPage *>(this->buffer_pool_manager_->FetchPage(parentInternalPage->ItemAt(index-1).second)->GetData());    // 3 获取左边[i-1]兄弟节点
+  if (index != 0) {
+    leftPage = reinterpret_cast<InternalPage *>(this->buffer_pool_manager_->FetchPage(parentPage->ItemAt(index-1).second)->GetData());    // 3 获取左边[i-1]兄弟节点
   }
-  if (leftLeafPage->GetSize() - 1 > leftLeafPage->GetMinSize()) {                                   // 4 如果左边兄弟节点可以借给我一个, 则借左边的尾部元素
-    MappingType elem = leftLeafPage->ItemAt(leftLeafPage->GetSize()-1);
-    leftLeafPage->Remove(elem.first, this->comparator_);
-    parentInternalPage->Remove(leafPage->ItemAt(0).first, this->comparator_);                                          // 5 父节点删除原来右子索引
+  if (leftPage != nullptr && leftPage->GetSize() - 1 > leftPage->GetMinSize()) {                       // 4 如果左边兄弟节点可以借给我一个, 则借左边的尾部元素
+    auto elem = leftPage->ItemAt(leftPage->GetSize()-1);
+    leftPage->Remove(elem.first, this->comparator_);
+                                                  
+    mePage->InsertFisrtNullKey(elem.second);                                                          // 6 本节点插入借来的KV
+    //chidPage = reinterpret_cast<BPlusTreePage *>(this->buffer_pool_manager_->FetchPage(elem.second)->GetData());
+    //chidPage->SetParentPageId(mePage->GetPageId);
 
-    leafPage->Insert(elem.first, elem.second, this->comparator_);                                                      // 6 本节点插入借来的KV
-    parentInternalPage->Insert(elem.first, leafPage->GetPageId(), this->comparator_);                                  // 7 父节点插入借来的KV索引
-    
-    this->buffer_pool_manager_->UnpinPage(leafPage->GetPageId(), true);
-    this->buffer_pool_manager_->UnpinPage(parentInternalPage->GetPageId(), true);
-    this->buffer_pool_manager_->UnpinPage(leftLeafPage->GetPageId(), true);
+    parentPage->SetKeyByIndex(elem.first, index);                    // 替代下面两行
+    //parentPage->Insert(elem.first, mePage->GetPageId(), this->comparator_);                                  // 7 父节点插入借来的KV索引
+    //parentPage->Remove(mePage->ItemAt(0).first, this->comparator_);                                        // 5 父节点删除原来右子索引
+
+    //this->buffer_pool_manager_->UnpinPage(chidPage->GetPageId(), true);
+    this->buffer_pool_manager_->UnpinPage(mePage->GetPageId(), true);
+    this->buffer_pool_manager_->UnpinPage(parentPage->GetPageId(), true);
+    this->buffer_pool_manager_->UnpinPage(leftPage->GetPageId(), true);
     return true;
   }
 
 
   // 偷取右侧
-  if (this->comparator_(parentInternalPage->ItemAt(index).first, leafPage->ItemAt(0).first) == 0 &&
-      parentInternalPage->GetSize() - 1 >= index+1) {
-      rightLeafPage = reinterpret_cast<LeafPage *>(this->buffer_pool_manager_->FetchPage(parentInternalPage->ItemAt(index+1).second)->GetData());   // 1 获取右侧节点
+  if ( index != parentPage->GetSize()) {
+      rightPage = reinterpret_cast<InternalPage *>(this->buffer_pool_manager_->FetchPage(parentPage->ItemAt(index+1).second)->GetData());   // 1 获取右侧节点
   }
 
-  if (rightLeafPage->GetSize() - 1 > leftLeafPage->GetMinSize()) {                                  // 2 如果右侧节点可以借给我一个, 则借右边兄弟头部的元素                     
-    MappingType elem = leftLeafPage->ItemAt(0);
-    rightLeafPage->Remove(elem.first, this->comparator_);
-    parentInternalPage->Remove(elem.first, this->comparator_);                                                         // 3 父节点删除右侧头部索引
+  if (rightPage != nullptr && rightPage->GetSize() - 1 > rightPage->GetMinSize()) {             // 2 如果右侧节点可以借给我一个, 则借右边兄弟头部的元素                     
+    auto elem = rightPage->ItemAt(0);
+    rightPage->RemoveFisrtNullKey();
 
-    leafPage->Insert(elem.first, elem.second, this->comparator_);                                                      // 4 本节点加入借来的元素
-    parentInternalPage->Insert(elem.first, leafPage->GetPageId(), this->comparator_);                                  // 5 父节点加入右侧的新头部索引
+    mePage->Insert(parentPage->ItemAt(index+1).first, elem.second, this->comparator_);          // 本节点接受kv                                            // 4 本节点加入借来的元素
+    //chidPage = reinterpret_cast<BPlusTreePage *>(this->buffer_pool_manager_->FetchPage(elem.second)->GetData());
+    //chidPage->SetParentPageId(mePage->GetPageId);
 
-    this->buffer_pool_manager_->UnpinPage(leafPage->GetPageId(), true);
-    this->buffer_pool_manager_->UnpinPage(parentInternalPage->GetPageId(), true);
-    this->buffer_pool_manager_->UnpinPage(rightLeafPage->GetPageId(), true);
+    parentPage->SetKeyByIndex(rightPage->ItemAt(0).first, index+1);                    // 替代下面两行
+    //parentPage->Insert(elem.first, mePage->GetPageId(), this->comparator_);                                  // 5 父节点加入右侧的新头部索引
+    //parentPage->Remove(elem.first, this->comparator_);                                                         // 3 父节点删除右侧头部索引
+
+    this->buffer_pool_manager_->UnpinPage(mePage->GetPageId(), true);
+    this->buffer_pool_manager_->UnpinPage(parentPage->GetPageId(), true);
+    this->buffer_pool_manager_->UnpinPage(rightPage->GetPageId(), true);
+    //this->buffer_pool_manager_->UnpinPage(chidPage->GetPageId(), true);
     return true;
   }
   return false;
@@ -299,74 +311,65 @@ auto BPLUSTREE_TYPE::StealLeafBrother(LeafPage *leafPage) -> bool {
 
 
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_TYPE::StealInternalBrother(InternalPage *internalPage) -> bool {
-  Page * parentPage = this->buffer_pool_manager_->FetchPage(internalPage->GetParentPageId());     // 1 获取父节点
-  InternalPage *parentInternalPage = reinterpret_cast <InternalPage *>(parentPage->GetData());
-  InternalPage *leftInternalPage;
-  InternalPage *rightInternalPage;
-  int index = parentInternalPage->IndexByKey(internalPage->ItemAt(0).first, this->comparator_);                      // 2 获取本节点
-  // parentInternalPage 大小应该 >=2, (包括[0]的空key)
-  // 应该 (parentInternalPage->array_[index].first == leafPage->ItemAt(0).first)
+auto BPLUSTREE_TYPE::StealLeafBrother(LeafPage *mePage) -> bool {
+  LeafPage *leftPage;
+  LeafPage *rightPage;
+  InternalPage *parentPage;
+  int index;
+
+  parentPage = reinterpret_cast <InternalPage *>(this->buffer_pool_manager_->FetchPage(mePage->GetParentPageId())->GetData());           // 1 获取父节点
+  index = parentPage->IndexByVal(mePage->GetPageId());                               // 2 获取本节点(叶子)第[0]个key在父节点的 index
+  if (index == -1) {
+    printf("异常 StealLeafBrother");
+  } 
+  
+  //int index = parentPage->IndexByKey(mePage->ItemAt(0).first);                            
+  // parentPage 大小应该 >=2, (包括[0]的空key)
+  // 应该 (parentPage->array_[index].first == mePage->ItemAt(0).first)
 
   // 偷取左侧
-  if (this->comparator_(parentInternalPage->ItemAt(index).first, internalPage->ItemAt(0).first) == 0) {                
-      leftInternalPage = reinterpret_cast<InternalPage *>(this->buffer_pool_manager_->FetchPage(parentInternalPage->ItemAt(index-1).second)->GetData());
+  if (index != 0) {
+    leftPage = reinterpret_cast<LeafPage *>(this->buffer_pool_manager_->FetchPage(parentPage->ItemAt(index-1).second)->GetData());    // 3 获取左边[i-1]兄弟节点
+  }
+  if (leftPage != nullptr && leftPage->GetSize() - 1 > leftPage->GetMinSize()) {                       // 4 如果左边兄弟节点可以借给我一个, 则借左边的尾部元素
+    MappingType elem = leftPage->ItemAt(leftPage->GetSize()-1);
+    leftPage->Remove(elem.first, this->comparator_);
 
-      if (leftInternalPage->GetSize() - 1 > leftInternalPage->GetMinSize()) {                              // 3 如果左侧节点可以借给我一个
-        auto elem = leftInternalPage->ItemAt(leftInternalPage->GetSize()-1);
-        // 寻找父节点是哪一个 key 的指针指向我？ 找到这个key， 将这个key和[0] 的value 结合向后移动到[1]
-        // 左侧借果来的 K:V 移动到右侧的[0] 位置， 并将K 移动到父节点。
-        int zkeyIndex = 0;
-        KeyType zkey;
-        parentInternalPage->GetLastSmallerKey(internalPage->ItemAt(1).first, zkeyIndex, zkey,
-                                                        this->comparator_);                           // 4 找到父节点指向本节点的指针的key
-        internalPage->Insert(zkey, internalPage->ItemAt(0).second, this->comparator_);                // 5 将zkey和本届点[0]的val组成K:V，向后平移1
-        internalPage->SetFisrtNullKey(elem.first, elem.second);                                       // 6 将借来的KV，放入[0]位置
+    mePage->Insert(elem.first, elem.second, this->comparator_);                                                      // 6 本节点插入借来的KV
+    
+    parentPage->SetKeyByIndex(elem.first, index);                    // 替代下面两行
+    //parentPage->Insert(elem.first, mePage->GetPageId(), this->comparator_);                                  // 7 父节点插入借来的KV索引
+    //parentPage->Remove(mePage->ItemAt(0).first, this->comparator_);                                        // 5 父节点删除原来右子索引
 
-        parentInternalPage->Remove(zkey, this->comparator_);                                                             // 7 父节点移除原先指向本节点指针的key
-        parentInternalPage->Insert(elem.first, internalPage->GetPageId(), this->comparator_);                            // 8 父节点插入指向本节点指针的新K:V
-
-        leftInternalPage->Remove(elem.first, this->comparator_);                                                         // 9 左节点删除借给我的K:V
-
-        this->buffer_pool_manager_->UnpinPage(internalPage->GetPageId(), true);
-        this->buffer_pool_manager_->UnpinPage(parentInternalPage->GetPageId(), true);
-        this->buffer_pool_manager_->UnpinPage(leftInternalPage->GetPageId(), true);
-        return 1;
-     }
+    this->buffer_pool_manager_->UnpinPage(mePage->GetPageId(), true);
+    this->buffer_pool_manager_->UnpinPage(parentPage->GetPageId(), true);
+    this->buffer_pool_manager_->UnpinPage(leftPage->GetPageId(), true);
+    return true;
   }
 
+
   // 偷取右侧
-  if (this->comparator_(parentInternalPage->ItemAt(index).first, internalPage->ItemAt(0).first) == 0 &&
-      parentInternalPage->GetSize() - 1 >= index+1) {
-    rightInternalPage = reinterpret_cast<InternalPage *>(this->buffer_pool_manager_->FetchPage(parentInternalPage->ItemAt(index+1).second)->GetData());   // 1 获取右侧节点
-    
-    if (rightInternalPage->GetSize() - 1 > leftInternalPage->GetMinSize()) {                          // 2 如果右侧节点可以借给我一个
-      // 找父节点指针 zkey 
-      // 构造KV， 加入本届点
-      // 父节点删除原K， insert 新K
-      // 右节点删除[0]
-      int zkeyIndex = 0;
-      KeyType zkey;
-      parentInternalPage->GetLastSmallerKey(rightInternalPage->ItemAt(1).first, zkeyIndex,
-                                                            zkey, this->comparator_);                 // 3 找到父节点指向本届点右侧节点的指针的key
-                                                                                                   // 4 zkey 和右侧节点[0]的val 构造K:V
-      
-      auto elem = std::pair<KeyType, page_id_t>(zkey, rightInternalPage->ItemAt(0).second);
-      internalPage->Insert(elem.first, elem.second, this->comparator_);
-      parentInternalPage->Remove(zkey, this->comparator_);                                                               // 6 父节点删除 zkey， 并插入新的K:V， k为右侧节点array_[1].first, v为右侧节点的pageid
-      parentInternalPage->Insert(rightInternalPage->ItemAt(1).first, rightInternalPage->GetPageId(), this->comparator_);
+  if ( index != parentPage->GetSize()) {
+      rightPage = reinterpret_cast<LeafPage *>(this->buffer_pool_manager_->FetchPage(parentPage->ItemAt(index+1).second)->GetData());   // 1 获取右侧节点
+  }
 
-      rightInternalPage->RemoveFisrtNullKey();                                                        // 7 右侧节点移除[0] 位置                       
+  if (rightPage != nullptr && rightPage->GetSize() - 1 > rightPage->GetMinSize()) {             // 2 如果右侧节点可以借给我一个, 则借右边兄弟头部的元素                     
+    MappingType elem = rightPage->ItemAt(0);
+    rightPage->Remove(elem.first, this->comparator_);
+    mePage->Insert(elem.first, elem.second, this->comparator_);                                                      // 4 本节点加入借来的元素
 
+    parentPage->SetKeyByIndex(elem.first, index+1);                    // 替代下面两行
+    //parentPage->Insert(elem.first, mePage->GetPageId(), this->comparator_);                                  // 5 父节点加入右侧的新头部索引
+    //parentPage->Remove(elem.first, this->comparator_);                                                         // 3 父节点删除右侧头部索引
 
-      this->buffer_pool_manager_->UnpinPage(internalPage->GetPageId(), true);
-      this->buffer_pool_manager_->UnpinPage(parentInternalPage->GetPageId(), true);
-      this->buffer_pool_manager_->UnpinPage(rightInternalPage->GetPageId(), true);
-      return 1;
-    }
-  } 
-  return 0;
+    this->buffer_pool_manager_->UnpinPage(mePage->GetPageId(), true);
+    this->buffer_pool_manager_->UnpinPage(parentPage->GetPageId(), true);
+    this->buffer_pool_manager_->UnpinPage(rightPage->GetPageId(), true);
+    return true;
+  }
+  return false;
 }
+
 
 /*
   尝试合并节点, leafNode
@@ -461,8 +464,8 @@ void BPLUSTREE_TYPE::MergeInternalNode(InternalPage *internalPage) {
     leftInternalPage = reinterpret_cast <InternalPage *>(leftPage->GetData());
     parentInternalPage->RemoveByIndex(index);                                                                // 4 父节点删除 zkey
 
-    internalPage->SetFisrtNullKey(zkey, internalPage->ItemAt(0).second);
-    for (int i = 0; i < internalPage->GetSize(); i++) {                                                  // 5 将本节点的kv复制到左节点尾部， 本节点清空
+    leftInternalPage->Insert(zkey, internalPage->ItemAt(0).second, this->comparator_);
+    for (int i = 1; i < internalPage->GetSize(); i++) {                                                  // 5 将本节点的kv复制到左节点尾部， 本节点清空
       leftInternalPage->Insert(internalPage->ItemAt(i).first, internalPage->ItemAt(i).second, this->comparator_);
     }
     this->buffer_pool_manager_->DeletePage(internalPage->GetPageId());
@@ -471,10 +474,9 @@ void BPLUSTREE_TYPE::MergeInternalNode(InternalPage *internalPage) {
   } else if (index != internalPage->GetSize()-1) {      // 和右边合并, 将右边复制到左边
     Page *rightPage = this->buffer_pool_manager_->FetchPage(parentInternalPage->ItemAt(index+1).second);       // 3 获取右边[i+1]兄弟节点
     rightInternalPage = reinterpret_cast <InternalPage *>(rightPage->GetData());
-    
-    parentInternalPage->RemoveByIndex(index+1);                                                           // 4 父节点删除指向右侧节点的KV
-    rightInternalPage->SetFisrtNullKey(parentInternalPage->ItemAt(index+1).first, rightInternalPage->ItemAt(0).second);
-    for (int i = 0; i < rightInternalPage->GetSize(); i++) {                                                  // 5 将本节点的kv复制到右节点头部， 本节点清空
+
+    internalPage->Insert(parentInternalPage->ItemAt(index+1).first, rightInternalPage->ItemAt(0).second, this->comparator_);    // 4 父节点删除指向右侧节点的KV
+    for (int i = 1; i < rightInternalPage->GetSize(); i++) {                                                  // 5 将本节点的kv复制到右节点头部， 本节点清空
       internalPage->Insert(rightInternalPage->ItemAt(i).first, rightInternalPage->ItemAt(i).second, this->comparator_);
     }
     this->buffer_pool_manager_->DeletePage(rightInternalPage->GetPageId());

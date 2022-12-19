@@ -56,9 +56,9 @@ class BPlusTreeInternalPage : public BPlusTreePage {
 
   auto RemoveFisrtNullKey() -> int;
 
-  auto InsertFisrtNullKey(KeyType key, ValueType value, KeyComparator &kcomparator) -> int;
+  auto InsertFisrtNullKey(ValueType value) -> int;
 
-  auto SetFisrtNullKey(KeyType key, ValueType value) -> int ;
+  auto SetFisrtNullKey(ValueType value) -> int ;
 
   auto GetLastSmallerKey(KeyType key, int &index, KeyType &rtkey, KeyComparator &kcomparator) -> int;
 
@@ -74,6 +74,8 @@ class BPlusTreeInternalPage : public BPlusTreePage {
   auto ItemAt(int index) const -> const MappingType &;
 
   auto IndexByKey(KeyType key, KeyComparator &kcomparator) -> int;
+
+  void SetKeyByIndex(KeyType key, int index);
 
 
  private:

@@ -52,8 +52,6 @@ class BPlusTreeLeafPage : public BPlusTreePage {
 
   auto IndexByKey(KeyType key, KeyComparator &kcomparator) -> int;
 
-  auto IndexByVal(ValueType val) -> int;
-
   auto Insert(KeyType key, ValueType value, KeyComparator &kcomparator) -> int ;
 
   auto Remove(KeyType key, KeyComparator &kcomparator) -> int ;

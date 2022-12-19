@@ -89,7 +89,7 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveOutRightHalf(BPlusTreeLeafPage *to)   {
 
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveInLeftHalf(MappingType *array, int start, int count)  {
-  for (int i = 0; i < count; i++) {
+  for (int i = start; i < count; i++) {
     this->InsertElemLast(array[i]);
   }
 }
@@ -109,24 +109,6 @@ auto B_PLUS_TREE_LEAF_PAGE_TYPE::IndexByKey(KeyType key, KeyComparator &kcompara
   return i;
 }
 
-/**
- * @brief 用val 寻找index
- * 
- * @param val 
- * @param kcomparator 
- * @return i   成功
- *         -1  失败,没有找到
- */
-INDEX_TEMPLATE_ARGUMENTS
-auto B_PLUS_TREE_LEAF_PAGE_TYPE::IndexByVal(ValueType val) -> int { 
-  int i = 0;
-  for ( i = 0; i < this->GetSize(); i++) {
-    if(this->array_[i].second == val) {     // 找这么一个 key, 此 key 第一次大于 入参 key; 找第一个大于入参 key 的 key
-      return i;
-    }
-  }
-  return -1;
-}
 
 INDEX_TEMPLATE_ARGUMENTS
 auto B_PLUS_TREE_LEAF_PAGE_TYPE::Insert(KeyType key, ValueType value, KeyComparator &kcomparator) -> int {

@@ -168,6 +168,12 @@ auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::Indexof(KeyType key, KeyComparator &kcompar
   return -1;
 }
 
+/**
+ * @brief 将elem 插入array_ 尾部
+ * 
+ * @param elem 
+ * @return INDEX_TEMPLATE_ARGUMENTS 
+ */
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::InsertElemLast(MappingType elem) {
   int id = this->GetSize();
@@ -175,6 +181,12 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::InsertElemLast(MappingType elem) {
   this->IncreaseSize();
 }
 
+/**
+ * @brief 将右边一般移动到 to 节点的 左边
+ * 
+ * @param to 
+ * @return INDEX_TEMPLATE_ARGUMENTS 
+ */
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::MoveOutRightHalf(BPlusTreeInternalPage *to)   {
   int midId = this->GetSize() / 2;
@@ -183,9 +195,17 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::MoveOutRightHalf(BPlusTreeInternalPage *to)
   this->DecreaseSize(count);
 }
 
+/**
+ * @brief 将 array 从start 的connt 的elem 插入本地array尾部
+ * 
+ * @param array 
+ * @param start 
+ * @param count 
+ * @return INDEX_TEMPLATE_ARGUMENTS 
+ */
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::MoveInLeftHalf(MappingType *array, int start, int count)  {
-  for (int i = 0; i < count; i++) {
+  for (int i = start; i < count; i++) {
     this->InsertElemLast(array[i]);
   }
 }
@@ -269,13 +289,13 @@ auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::RemoveFisrtNullKey() -> int {
         return, 1 成功， 1
 */
 INDEX_TEMPLATE_ARGUMENTS
-auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::InsertFisrtNullKey(KeyType key, ValueType value, KeyComparator &kcomparator) -> int {
+auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::InsertFisrtNullKey(ValueType value) -> int {
   int index = 0;
 
   for (int i = this->GetSize(); i >= index; i--) {
     this->array_[i] = this->array_[i+1];
   }
-  this->array_[index] = MappingType(key, value);
+  this->array_[index] = MappingType(KeyType{}, value);
   this->IncreaseSize();
   return 1;
   //如果到了最小, 合并
@@ -286,14 +306,21 @@ auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::InsertFisrtNullKey(KeyType key, ValueType v
         return, 1 成功， 1
 */
 INDEX_TEMPLATE_ARGUMENTS
-auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::SetFisrtNullKey(KeyType key, ValueType value) -> int {
+auto B_PLUS_TREE_INTERNAL_PAGE_TYPE::SetFisrtNullKey(ValueType value) -> int {
   int index = 0;
 
-  this->array_[index] = MappingType(key, value);
+  this->array_[index] = MappingType(KeyType{}, value);
     // this->IncreaseSize();       // set 无需递增计数
   return 1;
   //如果到了最小, 合并
 }
+INDEX_TEMPLATE_ARGUMENTS
+void B_PLUS_TREE_INTERNAL_PAGE_TYPE::SetKeyByIndex(KeyType key, int index) {
+  // 校验 index
+  this->array_[index].first = key;
+  return;
+}
+
 
 
 

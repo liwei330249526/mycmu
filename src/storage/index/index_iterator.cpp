@@ -15,8 +15,8 @@ INDEX_TEMPLATE_ARGUMENTS
 INDEXITERATOR_TYPE::IndexIterator() = default;
 
 INDEX_TEMPLATE_ARGUMENTS
-INDEXITERATOR_TYPE::IndexIterator(int index, Page *page, BufferPoolManager *bpm):
-                              index_(index), page_(page), buffer_pool_manager_(bpm) {}
+INDEXITERATOR_TYPE::IndexIterator(int index, B_PLUS_TREE_LEAF_PAGE_TYPE *btpage, BufferPoolManager *bpm):
+                              index_(index), bptLeafPage_(btpage), buffer_pool_manager_(bpm) {}
 
 INDEX_TEMPLATE_ARGUMENTS
 INDEXITERATOR_TYPE::~IndexIterator() = default;  // NOLINT

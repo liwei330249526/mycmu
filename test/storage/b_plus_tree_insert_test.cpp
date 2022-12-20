@@ -20,7 +20,7 @@
 
 namespace bustub {
 
-TEST(BPlusTreeTests, DISABLED_InsertTest1) {
+TEST(BPlusTreeTests, InsertTest1) {
   // create KeyComparator and index schema  创建key比较器,和索引schema
   auto key_schema = ParseCreateStatement("a bigint");
   GenericComparator<8> comparator(key_schema.get());
@@ -64,7 +64,7 @@ TEST(BPlusTreeTests, DISABLED_InsertTest1) {
   remove("test.log");
 }
 
-TEST(BPlusTreeTests, DISABLED_InsertTest2) {
+TEST(BPlusTreeTests, InsertTest2) {
   // create KeyComparator and index schema
   auto key_schema = ParseCreateStatement("a bigint");
   GenericComparator<8> comparator(key_schema.get());
@@ -83,7 +83,7 @@ TEST(BPlusTreeTests, DISABLED_InsertTest2) {
   auto header_page = bpm->NewPage(&page_id);
   (void)header_page;
 
-  std::vector<int64_t> keys = {1, 2, 3, 4, 5};
+  std::vector<int64_t> keys = {1, 2, 3, 4, 5};      // 插入5个kv
   for (auto key : keys) {
     int64_t value = key & 0xFFFFFFFF;
     rid.Set(static_cast<int32_t>(key >> 32), value);
@@ -92,7 +92,7 @@ TEST(BPlusTreeTests, DISABLED_InsertTest2) {
   }
 
   std::vector<RID> rids;
-  for (auto key : keys) {
+  for (auto key : keys) {                         // 读取, 校验
     rids.clear();
     index_key.SetFromInteger(key);
     tree.GetValue(index_key, &rids);
@@ -105,7 +105,7 @@ TEST(BPlusTreeTests, DISABLED_InsertTest2) {
   int64_t size = 0;
   bool is_present;
 
-  for (auto key : keys) {
+  for (auto key : keys) {                          // 读取, 校验
     rids.clear();
     index_key.SetFromInteger(key);
     is_present = tree.GetValue(index_key, &rids);
@@ -127,7 +127,7 @@ TEST(BPlusTreeTests, DISABLED_InsertTest2) {
   remove("test.log");
 }
 
-TEST(BPlusTreeTests, DISABLED_InsertTest3) {
+TEST(BPlusTreeTests, InsertTest3) {
   // create KeyComparator and index schema
   auto key_schema = ParseCreateStatement("a bigint");
   GenericComparator<8> comparator(key_schema.get());
@@ -147,7 +147,7 @@ TEST(BPlusTreeTests, DISABLED_InsertTest3) {
   ASSERT_EQ(page_id, HEADER_PAGE_ID);
   (void)header_page;
 
-  std::vector<int64_t> keys = {5, 4, 3, 2, 1};
+  std::vector<int64_t> keys = {5, 4, 3, 2, 1};          // 插入5个kv
   for (auto key : keys) {
     int64_t value = key & 0xFFFFFFFF;
     rid.Set(static_cast<int32_t>(key >> 32), value);

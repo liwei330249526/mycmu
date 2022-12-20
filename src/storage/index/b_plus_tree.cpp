@@ -63,6 +63,7 @@ auto BPLUSTREE_TYPE::GetValue(const KeyType &key, std::vector<ValueType> *result
   LeafPage *lpage = reinterpret_cast<LeafPage *>(this->FindLeafPageByKey(key)->GetData());
   ValueType value;
   ret = lpage->GetValByKey(key, value, this->comparator_);
+  result->push_back(value);
   return ret;
 }
 
@@ -567,8 +568,9 @@ auto BPLUSTREE_TYPE::FindLeftMostLeftLeafPage() -> Page* {
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::Begin() -> INDEXITERATOR_TYPE {
   // 1 用root page id 获取页, 强转为 BPlusTreePage, 判断是不是 leaf , 一直想左下搜索
-  Page *bptLeafPge = this->FindLeftMostLeftLeafPage();
-  return INDEXITERATOR_TYPE(0, bptLeafPge, this->buffer_pool_manager_);
+  Page *page = this->FindLeftMostLeftLeafPage();
+  B_PLUS_TREE_LEAF_PAGE_TYPE *lpage  = reinterpret_cast <B_PLUS_TREE_LEAF_PAGE_TYPE *>(page->GetData());  
+  return INDEXITERATOR_TYPE(0, lpage, this->buffer_pool_manager_);
 }
 
 /*
@@ -622,7 +624,12 @@ auto BPLUSTREE_TYPE::FindLeafPageByKey(KeyType key) -> Page* {
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::Begin(const KeyType &key) -> INDEXITERATOR_TYPE {
   Page *page = FindLeafPageByKey(key);
-  return INDEXITERATOR_TYPE(0, page, this->buffer_pool_manager_);
+  B_PLUS_TREE_LEAF_PAGE_TYPE *lpage  = reinterpret_cast <B_PLUS_TREE_LEAF_PAGE_TYPE *>(page->GetData());
+  int index = 0;
+  if (lpage != nullptr) {
+    index = lpage->IndexByKey(key, this->comparator_);
+  }
+  return INDEXITERATOR_TYPE(index, lpage, this->buffer_pool_manager_);
 }
 
 /*
@@ -632,7 +639,7 @@ auto BPLUSTREE_TYPE::Begin(const KeyType &key) -> INDEXITERATOR_TYPE {
  * 直到最后的page 
  */
 INDEX_TEMPLATE_ARGUMENTS
-auto BPLUSTREE_TYPE::End() -> INDEXITERATOR_TYPE { return INDEXITERATOR_TYPE(); }
+auto BPLUSTREE_TYPE::End() -> INDEXITERATOR_TYPE { return INDEXITERATOR_TYPE(0, nullptr, nullptr); }
 
 /**
  * @return Page id of the root of this tree

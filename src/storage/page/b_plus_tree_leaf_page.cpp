@@ -30,11 +30,12 @@ namespace bustub {
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::Init(page_id_t page_id, page_id_t parent_id, int max_size) {
   this->SetPageId(page_id);
+  this->SetNextPageId(INVALID_PAGE_ID);
   this->SetParentPageId(parent_id);
 
   this->SetMaxSize(max_size-1);
   this->SetPageType(IndexPageType::LEAF_PAGE);
-  this->SetSize(1);
+  this->SetSize(0);
 }
 
 /**
@@ -116,8 +117,8 @@ auto B_PLUS_TREE_LEAF_PAGE_TYPE::Insert(KeyType key, ValueType value, KeyCompara
   if (kcomparator(key, this->array_[index].first) == 0) {
     return 0;
   }
-  for (int i = this->GetSize(); i >= index; i--) {
-    this->array_[i] = this->array_[i+1];
+  for (int i = this->GetSize()-1; i >= index; i--) {
+    this->array_[i+1] =this->array_[i];
   }
   this->array_[index] = MappingType(key, value);
 

@@ -32,7 +32,7 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::Init(page_id_t page_id, page_id_t parent_id
 
   this->SetMaxSize(max_size);
   this->SetPageType(IndexPageType::INVALID_INDEX_PAGE);
-  this->SetSize(1);
+  this->SetSize(0);
 }
 /*
  * Helper method to get/set the key associated with input "index"(a.k.a

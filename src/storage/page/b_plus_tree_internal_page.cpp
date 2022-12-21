@@ -205,7 +205,7 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::MoveOutRightHalf(BPlusTreeInternalPage *to)
  */
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::MoveInLeftHalf(MappingType *array, int start, int count)  {
-  for (int i = start; i < count; i++) {
+  for (int i = start; i < start + count; i++) {
     this->InsertElemLast(array[i]);
   }
 }

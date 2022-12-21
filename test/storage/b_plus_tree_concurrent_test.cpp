@@ -23,8 +23,8 @@
 namespace bustub {
 // helper function to launch multiple threads
 template <typename... Args>
-void LaunchParallelTest(uint64_t num_threads, Args &&...args) {
-  std::vector<std::thread> thread_group;
+void LaunchParallelTest(uint64_t num_threads, Args &&...args) {     // 这里的 &&... 啥意思
+  std::vector<std::thread> thread_group;            // 线程 vector
 
   // Launch a group of threads
   for (uint64_t thread_itr = 0; thread_itr < num_threads; ++thread_itr) {
@@ -119,7 +119,7 @@ TEST(BPlusTreeConcurrentTest, DISABLED_InsertTest1) {
   for (int64_t key = 1; key < scale_factor; key++) {
     keys.push_back(key);
   }
-  LaunchParallelTest(2, InsertHelper, &tree, keys);
+  LaunchParallelTest(2, InsertHelper, &tree, keys);       // 两个线程并发插入
 
   std::vector<RID> rids;
   GenericKey<8> index_key;

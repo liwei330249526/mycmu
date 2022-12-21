@@ -33,7 +33,7 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::Init(page_id_t page_id, page_id_t parent_id, in
   this->SetNextPageId(INVALID_PAGE_ID);
   this->SetParentPageId(parent_id);
 
-  this->SetMaxSize(max_size-1);
+  this->SetMaxSize(max_size);
   this->SetPageType(IndexPageType::LEAF_PAGE);
   this->SetSize(0);
 }
@@ -84,13 +84,13 @@ INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveOutRightHalf(BPlusTreeLeafPage *to)   {
   int midId = this->GetSize() / 2;
   int count = this->GetSize() - midId;  // 10 个元素, 最大 index=9, mid=5, 共5个. 
-  this->MoveInLeftHalf(this->array_, midId, count);
+  to->MoveInLeftHalf(this->array_, midId, count);
   this->DecreaseSize(count);
 }
 
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveInLeftHalf(MappingType *array, int start, int count)  {
-  for (int i = start; i < count; i++) {
+  for (int i = start; i < start + count; i++) {
     this->InsertElemLast(array[i]);
   }
 }

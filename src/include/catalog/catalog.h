@@ -202,18 +202,18 @@ class Catalog {
   auto CreateIndex(Transaction *txn, const std::string &index_name, const std::string &table_name, const Schema &schema,
                    const Schema &key_schema, const std::vector<uint32_t> &key_attrs, std::size_t keysize,
                    HashFunction<KeyType> hash_function) -> IndexInfo * {
-    // Reject the creation request for nonexistent table
+    // Reject the creation request for nonexistent table     没有此表, 则返回
     if (table_names_.find(table_name) == table_names_.end()) {
       return NULL_INDEX_INFO;
     }
 
-    // If the table exists, an entry for the table should already be present in index_names_
+    // If the table exists, an entry for the table should already be present in index_names_ , 应该有index
     BUSTUB_ASSERT((index_names_.find(table_name) != index_names_.end()), "Broken Invariant");
 
     // Determine if the requested index already exists for this table
     auto &table_indexes = index_names_.find(table_name)->second;
     if (table_indexes.find(index_name) != table_indexes.end()) {
-      // The requested index already exists for this table
+      // The requested index already exists for this table          // 拒绝已经存在的 index_name
       return NULL_INDEX_INFO;
     }
 
@@ -225,10 +225,10 @@ class Catalog {
     // to allow specification of the index type itself, not
     // just the key, value, and comparator types
 
-    // TODO(chi): support both hash index and btree index
+    // TODO(chi): support both hash index and btree index         b+index
     auto index = std::make_unique<BPlusTreeIndex<KeyType, ValueType, KeyComparator>>(std::move(meta), bpm_);
 
-    // Populate the index with all tuples in table heap
+    // Populate the index with all tuples in table heap    计算index
     auto *table_meta = GetTable(table_name);
     auto *heap = table_meta->table_.get();
     for (auto tuple = heap->Begin(txn); tuple != heap->End(); ++tuple) {
@@ -238,7 +238,7 @@ class Catalog {
     // Get the next OID for the new index
     const auto index_oid = next_index_oid_.fetch_add(1);
 
-    // Construct index information; IndexInfo takes ownership of the Index itself
+    // Construct index information; IndexInfo takes ownership of the Index itself  indexinfo
     auto index_info =
         std::make_unique<IndexInfo>(key_schema, index_name, std::move(index), index_oid, table_name, keysize);
     auto *tmp = index_info.get();

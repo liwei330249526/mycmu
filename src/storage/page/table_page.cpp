@@ -60,11 +60,11 @@ auto TablePage::InsertTuple(const Tuple &tuple, RID *rid, Transaction *txn, Lock
 
   // Otherwise we claim available free space..
   SetFreeSpacePointer(GetFreeSpacePointer() - tuple.size_);
-  memcpy(GetData() + GetFreeSpacePointer(), tuple.data_, tuple.size_);
+  memcpy(GetData() + GetFreeSpacePointer(), tuple.data_, tuple.size_);    // 将tuple 复制到这里
 
   // Set the tuple.
-  SetTupleOffsetAtSlot(i, GetFreeSpacePointer());
-  SetTupleSize(i, tuple.size_);
+  SetTupleOffsetAtSlot(i, GetFreeSpacePointer());                       // tuple位置
+  SetTupleSize(i, tuple.size_);                                         // tuple 大小
 
   rid->Set(GetTablePageId(), i);
   if (i == GetTupleCount()) {

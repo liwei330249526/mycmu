@@ -189,8 +189,8 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::InsertElemLast(MappingType elem) {
  */
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::MoveOutRightHalf(BPlusTreeInternalPage *to)   {
-  int midId = this->GetSize() / 2;
-  int count = this->GetSize() - midId;  // 10 个元素, 最大 index=9, mid=5, 共5个. 
+  int count = this->GetSize() / 2;
+  int midId = this->GetSize() - count;  // 10 个元素, 最大 index=9, mid=5, 共5个. 
   to->MoveInLeftHalf(this->array_, midId, count);
   this->DecreaseSize(count);
 }

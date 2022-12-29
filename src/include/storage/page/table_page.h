@@ -126,8 +126,9 @@ class TablePage : public Page {
   /** @return the rid of the first tuple in this page */
 
   /**
-   * @param[out] first_rid the RID of the first tuple in this page
+   * @param[out] first_rid the RID of the first tuple in this page, 哪个页? 哪个槽位
    * @return true if the first tuple exists, false otherwise
+   * 本页的元组
    */
   auto GetFirstTupleRid(RID *first_rid) -> bool;
 

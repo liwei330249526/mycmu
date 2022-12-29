@@ -52,7 +52,7 @@ struct TableInfo {
   Schema schema_;
   /** The table name */
   const std::string name_;
-  /** An owning pointer to the table heap */
+  /** An owning pointer to the table heap */       // table指针
   std::unique_ptr<TableHeap> table_;
   /** The table OID */
   const table_oid_t oid_;

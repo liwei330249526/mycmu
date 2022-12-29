@@ -16,7 +16,8 @@ namespace bustub {
 
 SeqScanExecutor::SeqScanExecutor(ExecutorContext *exec_ctx, const SeqScanPlanNode *plan) : AbstractExecutor(exec_ctx) {}
 
-void SeqScanExecutor::Init() { throw NotImplementedException("SeqScanExecutor is not implemented"); }
+void SeqScanExecutor::Init() {
+    throw NotImplementedException("SeqScanExecutor is not implemented"); }
 
 auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool { return false; }
 

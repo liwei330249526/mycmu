@@ -19,7 +19,7 @@ namespace bustub {
 TableIterator::TableIterator(TableHeap *table_heap, RID rid, Transaction *txn)
     : table_heap_(table_heap), tuple_(new Tuple(rid)), txn_(txn) {
   if (rid.GetPageId() != INVALID_PAGE_ID) {
-    table_heap_->GetTuple(tuple_->rid_, tuple_, txn_);
+    table_heap_->GetTuple(tuple_->rid_, tuple_, txn_);      // 获取的tuple 放在了成员变量里 tuple_
   }
 }
 

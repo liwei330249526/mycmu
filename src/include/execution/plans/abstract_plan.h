@@ -72,7 +72,7 @@ class AbstractPlanNode {
   /** Virtual destructor. */
   virtual ~AbstractPlanNode() = default;
 
-  /** @return the schema for the output of this plan node */
+  /** @return the schema for the output of this plan node */      // schema 为了本plan节点的输出
   auto OutputSchema() const -> const Schema & { return *output_schema_; }
 
   /** @return the child of this plan node at index child_idx */

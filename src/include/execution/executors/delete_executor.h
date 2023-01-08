@@ -55,10 +55,15 @@ class DeleteExecutor : public AbstractExecutor {
   /** @return The output schema for the delete */
   auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); };
 
+  void Delete(Tuple *tuple, RID *rid);
+
  private:
   /** The delete plan node to be executed */
   const DeletePlanNode *plan_;
   /** The child executor from which RIDs for deleted tuples are pulled */
   std::unique_ptr<AbstractExecutor> child_executor_;
+
+  TableHeap *thp_;                      // 表 heap
+  std::vector<IndexInfo *> indexes_;
 };
 }  // namespace bustub

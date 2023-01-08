@@ -61,7 +61,7 @@ class InsertExecutor : public AbstractExecutor {
   const InsertPlanNode *plan_;          // insert 计划节点
   TableHeap *thp_;                      // 表 heap
 
-  std::unique_ptr<AbstractExecutor> childExecutor_;
+  std::unique_ptr<AbstractExecutor> child_executor_;
   std::vector<IndexInfo *> indexes_;
 };
 

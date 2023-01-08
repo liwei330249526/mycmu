@@ -24,8 +24,9 @@ namespace bustub {
 /**
  * The DeletePlanNode identifies a table from which tuples should be deleted.
  * The tuple(s) to be updated come from the child of the DeleteExecutor.
- *
+ *删除计划节点指示该表, 我要删除该表的一些tuple, tuple 来自 子执行器
  * NOTE: To simplify the assignment, DeletePlanNode has at most one child.
+ * 最多有一个子
  */
 class DeletePlanNode : public AbstractPlanNode {
  public:

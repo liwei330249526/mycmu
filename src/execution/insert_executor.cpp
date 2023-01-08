@@ -20,7 +20,7 @@ InsertExecutor::InsertExecutor(ExecutorContext *exec_ctx, const InsertPlanNode *
                                std::unique_ptr<AbstractExecutor> &&child_executor)
     : AbstractExecutor(exec_ctx),
       plan_(plan),
-      childExecutor_(std::move(child_executor)) {}  // std::move 对于 unique_ptr
+      child_executor_(std::move(child_executor)) {}  // std::move 对于 unique_ptr
                                                     // 初始化列表中可以用 std::move
 /*
     1 获取表的所有indexs
@@ -42,7 +42,7 @@ void InsertExecutor::Init() {
 
   indexes_ = clog->GetTableIndexes(tinf->name_);  // 所有 index, 为了向b+树中插入KV
 
-  childExecutor_->Init();  // 子计划初始化, 子计划是啥, 咱也不知道, 反正这玩意儿总得初始化吧
+  child_executor_->Init();  // 子计划初始化, 子计划是啥, 咱也不知道, 反正这玩意儿总得初始化吧
 
   printf("InsertExecutor::Init() done\n");
   return;
@@ -61,7 +61,7 @@ auto InsertExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
 
   // printf("InsertExecutor::Next start tuple=%s , rid=%s\n",
   // tuple->ToString(&(GetExecutorContext()->GetCatalog()->GetTable(plan_->TableOid())->schema_)), rid->ToString());
-  ret = childExecutor_->Next(tuple, rid);  // 另个参数是出参, 也就是说从这里获取要插入的 tuple 和 rid
+  ret = child_executor_->Next(tuple, rid);  // 另个参数是出参, 也就是说从这里获取要插入的 tuple 和 rid
   if (!ret) {
     return false;
   }

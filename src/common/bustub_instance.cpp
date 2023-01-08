@@ -183,7 +183,7 @@ void BustubInstance::ExecuteSql(const std::string &sql, ResultWriter &writer) {
         std::vector<uint32_t> col_ids;
         for (const auto &col : index_stmt.cols_) {
           auto idx = index_stmt.table_->schema_.GetColIdx(col->col_name_.back());
-          col_ids.push_back(idx);
+          col_ids.push_back(idx);                                                       // 表中某些列的的一个集合
           if (index_stmt.table_->schema_.GetColumn(idx).GetType() != TypeId::INTEGER) {
             throw NotImplementedException("only support creating index on integer column");
           }

@@ -37,26 +37,32 @@ class InsertExecutor : public AbstractExecutor {
   InsertExecutor(ExecutorContext *exec_ctx, const InsertPlanNode *plan,
                  std::unique_ptr<AbstractExecutor> &&child_executor);
 
-  /** Initialize the insert */
+  /** Initialize the insert */    //初始化 insert
   void Init() override;
 
   /**
    * Yield the number of rows inserted into the table.
-   * @param[out] tuple The integer tuple indicating the number of rows inserted into the table
-   * @param[out] rid The next tuple RID produced by the insert (ignore, not used)
-   * @return `true` if a tuple was produced, `false` if there are no more tuples
+   * @param[out] tuple The integer tuple indicating the number of rows inserted into the table 整数元组，指示插入到表中的行数
+   * @param[out] rid The next tuple RID produced by the insert (ignore, not used)  插入生成的下一个元组RID（忽略，不使用）
+   * @return `true` if a tuple was produced, `false` if there are no more tuples `true`如果生成了元组，如果没有更多元组，则为`false`
    *
    * NOTE: InsertExecutor::Next() does not use the `rid` out-parameter.
    * NOTE: InsertExecutor::Next() returns true with number of inserted rows produced only once.
    */
   auto Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool override;
 
-  /** @return The output schema for the insert */
+  /** @return The output schema for the insert */     // 插入的输出schema
   auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); };
+
+  void Insert(Tuple *tuple, RID *rid);
 
  private:
   /** The insert plan node to be executed*/
-  const InsertPlanNode *plan_;
+  const InsertPlanNode *plan_;          // insert 计划节点
+  TableHeap *thp_;                      // 表 heap
+
+  std::unique_ptr<AbstractExecutor> childExecutor_;
+  std::vector<IndexInfo *> indexes_;
 };
 
 }  // namespace bustub

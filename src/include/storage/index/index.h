@@ -39,16 +39,16 @@ class IndexMetadata {
 
   /**
    * Construct a new IndexMetadata instance.
-   * @param index_name The name of the index
-   * @param table_name The name of the table on which the index is created
-   * @param tuple_schema The schema of the indexed key
-   * @param key_attrs The mapping from indexed columns to base table columns
+   * @param index_name The name of the index          索引名
+   * @param table_name The name of the table on which the index is created 表名
+   * @param tuple_schema The schema of the indexed key        tuple 的schema
+   * @param key_attrs The mapping from indexed columns to base table columns  表属性
    */
   IndexMetadata(std::string index_name, std::string table_name, const Schema *tuple_schema,
                 std::vector<uint32_t> key_attrs)
       : name_(std::move(index_name)), table_name_(std::move(table_name)), key_attrs_(std::move(key_attrs)) {
-    key_schema_ = std::make_shared<Schema>(Schema::CopySchema(tuple_schema, key_attrs_));
-  }
+    key_schema_ = std::make_shared<Schema>(Schema::CopySchema(tuple_schema, key_attrs_));     // 根据 key 属性, 即表的列集合
+  }                                                                                           // 和表schema 构成一个 子schema
 
   ~IndexMetadata() = default;
 
@@ -62,7 +62,7 @@ class IndexMetadata {
   inline auto GetKeySchema() const -> Schema * { return key_schema_.get(); }
 
   /**
-   * @return The number of columns inside index key (not in tuple key)
+   * @return The number of columns inside index key (not in tuple key)     多少个列
    *
    * NOTE: this must be defined inside the cpp source file because it
    * uses the member of catalog::Schema which is not known here.

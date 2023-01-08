@@ -100,10 +100,10 @@ class TableHeap {
    */
   auto GetTuple(const RID &rid, Tuple *tuple, Transaction *txn) -> bool;
 
-  /** @return the begin iterator of this table */
+  /** @return the begin iterator of this table */  // 表的迭代器起始
   auto Begin(Transaction *txn) -> TableIterator;
 
-  /** @return the end iterator of this table */
+  /** @return the end iterator of this table */     // 表的迭代器结束
   auto End() -> TableIterator;
 
   /** @return the id of the first page of this table */

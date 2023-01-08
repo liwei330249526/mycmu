@@ -21,6 +21,9 @@
 namespace bustub {
 
 // TODO(Amadou): It does not look like nulls are supported. Add a null bitmap?
+// 将 values 根据 schema 偏移 写到 tuple 的 data_中中
+      //    new Type(TypeId::INVALID),        new BooleanType(), new TinyintType(), new SmallintType(),
+      //    new IntegerType(TypeId::INTEGER), new BigintType(),  new DecimalType(), new VarlenType(TypeId::VARCHAR),
 Tuple::Tuple(std::vector<Value> values, const Schema *schema) : allocated_(true) {
   assert(values.size() == schema->GetColumnCount());
 

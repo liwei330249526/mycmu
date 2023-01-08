@@ -43,11 +43,11 @@ class Schema {
     return Schema{cols};
   }
 
-  /** @return all the columns in the schema */
+  /** @return all the columns in the schema */    // 表,  所有列
   auto GetColumns() const -> const std::vector<Column> & { return columns_; }
 
   /**
-   * Returns a specific column from the schema.
+   * Returns a specific column from the schema.   //获取特定列
    * @param col_idx index of requested column
    * @return requested column
    */
@@ -55,7 +55,7 @@ class Schema {
 
   /**
    * Looks up and returns the index of the first column in the schema with the specified name.
-   * If multiple columns have the same name, the first such index is returned.
+   * If multiple columns have the same name, the first such index is returned.    返回列明的列 index
    * @param col_name name of column to look for
    * @return the index of a column with the given name, throws an exception if it does not exist
    */
@@ -81,7 +81,7 @@ class Schema {
     return std::nullopt;
   }
 
-  /** @return the indices of non-inlined columns */
+  /** @return the indices of non-inlined columns */      // 非内联列的索引
   auto GetUnlinedColumns() const -> const std::vector<uint32_t> & { return uninlined_columns_; }
 
   /** @return the number of columns in the schema for the tuple */

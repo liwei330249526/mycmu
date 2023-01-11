@@ -38,7 +38,7 @@ auto BPLUSTREE_TYPE::IsEmpty() const -> bool {
   if (this->root_page_id_ == INVALID_PAGE_ID) {
     return true;
   }
-
+  /*
   Page *page = this->buffer_pool_manager_->FetchPage(this->root_page_id_);   //获取page
   BPlusTreePage *btPage = reinterpret_cast<BPlusTreePage *>(page->GetData());         //page 的data 强转为btpage
   if (btPage->GetSize() == 0) {
@@ -46,6 +46,9 @@ auto BPLUSTREE_TYPE::IsEmpty() const -> bool {
     return true;
   }
   this->buffer_pool_manager_->UnpinPage(btPage->GetPageId(), false);
+
+  */
+
   return false;
 }
 /*****************************************************************************
@@ -214,7 +217,6 @@ void BPLUSTREE_TYPE::SplitLeafNode(LeafPage *mePage) {
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::Insert(const KeyType &key, const ValueType &value, Transaction *transaction) -> bool {
-
   BPlusTreePage *mePage = nullptr;
   LeafPage *leafPage;
   if (this->IsEmpty()) {                              // 如果树是空的
@@ -555,12 +557,26 @@ void BPLUSTREE_TYPE::Remove(const KeyType &key, Transaction *transaction) {
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::FindLeftMostLeftLeafPage() -> Page* {
   // 1 用root page id 获取页, 强转为 BPlusTreePage, 判断是不是 leaf , 一直想左下搜索
+
+  if (IsEmpty()) {
+    return nullptr;
+  }
+
   Page *page = this->buffer_pool_manager_->FetchPage(this->GetRootPageId());   //获取page
+  assert(this->GetRootPageId() != 0);
+  printf("FindLeftMostLeftLeafPage pageid=%d\n", this->GetRootPageId());
   BPlusTreePage *btPage = reinterpret_cast<BPlusTreePage *>(page->GetData());         //page 的data 强转为btpage
 
   BPlusTreePage *ctpage = btPage;
   // 2 遍历寻找, 条件不是leaf, 则继续寻找
-  while (!ctpage->IsLeafPage()) {
+  int count = 0;
+  while (!ctpage->IsLeafPage()) {       // 非 leaf
+    if (count == 1) {
+      break;
+    }
+    count++;
+    
+    printf("FindLeftMostLeftLeafPage pageid=%d\n", ctpage->GetPageId());
     InternalPage *bintnal_page = reinterpret_cast <InternalPage *>(ctpage);    //btpage 强转为内部节点
     page_id_t leftPageId =  bintnal_page->ValueAt(0);                                 //获取第一个kv的v, 即pageid
     Page *leftPage = (this->buffer_pool_manager_->FetchPage(leftPageId));                  //或对page
@@ -605,6 +621,10 @@ auto BPLUSTREE_TYPE::Begin() -> INDEXITERATOR_TYPE {
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::FindLeafPageByKey(KeyType key) -> Page* {
   // 1 用root page id 获取页, 强转为 BPlusTreePage, 判断是不是 leaf , 一直想左下搜索
+  if (IsEmpty()) {
+    return nullptr;
+  }
+
   Page *page = (this->buffer_pool_manager_->FetchPage(this->GetRootPageId()));   //获取page
   BPlusTreePage *btPage = reinterpret_cast <BPlusTreePage *>(page->GetData());         //page 的data 强转为btpage
 

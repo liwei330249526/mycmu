@@ -109,14 +109,16 @@ auto BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) -> Page * {
   }
 }
 /*
-  1 从pagetable 中查找, 如果存在则返回此页
-  2 从freelist 中找到一个空的 pages_的 位置, 如果能找到到, 使用 diskmanager 读取pageid的页到该 pageframid位置     -->4
+  1 从 pagetable 中查找, 如果存在则返回此页
+  2 从 freelist 中找到一个空的 pages_的 位置, 如果能找到到, 使用 diskmanager 读取pageid的页到该 pageframid位置     -->4
   3    freelist为空                                     , 则使用lru-k 驱逐一个, 获取 framid  如果page脏了, 写磁盘   -->4
   4 返回该页
 */
 auto BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) -> Page * {
   bool ret;
   frame_id_t frame_id;
+  assert(page_id != INVALID_PAGE_ID);
+  printf("FetchPgImp pageid=%d\n", page_id);
   if (this->page_table_->Find(page_id, frame_id)) {
     return &(this->pages_[frame_id]);
   }
@@ -168,6 +170,7 @@ auto BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) -> Page * {
 */
 auto BufferPoolManagerInstance::UnpinPgImp(page_id_t page_id, bool is_dirty) -> bool {
   frame_id_t frame_id;
+  printf("UnpinPgImp pageid=%d\n", page_id);
   if (!this->page_table_->Find(page_id, frame_id)) {
     return false;
   }
@@ -251,15 +254,17 @@ void BufferPoolManagerInstance::MyPrintData() {
 
 // 找到第一个为 0 的id
 auto BufferPoolManagerInstance::AllocatePage() -> page_id_t {
-  page_id_t ret;
+  page_id_t retId;
+  /*
   if (!this->free_pageid_.empty()) {
     page_id_t ret = this->free_pageid_.front();
     this->free_pageid_.pop_front();
     return ret;
   }
-  ret = this->next_page_id_;
+  */
+  retId = this->next_page_id_;
   next_page_id_++;
-  return ret; 
+  return retId; 
 }
 
 // 将此id 还回来

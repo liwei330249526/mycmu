@@ -141,10 +141,10 @@ TEST(BPlusTreeTests, InsertTest3) {
   // create transaction
   auto *transaction = new Transaction(0);
 
-  // create and fetch header_page
+  // create and fetch header_page         获取头节点
   page_id_t page_id;
-  auto header_page = bpm->NewPage(&page_id);
-  ASSERT_EQ(page_id, HEADER_PAGE_ID);
+  auto header_page = bpm->NewPage(&page_id);        // 先获取头节点
+  ASSERT_EQ(page_id, HEADER_PAGE_ID);               // 第一个返回 0 页id
   (void)header_page;
 
   std::vector<int64_t> keys = {5, 4, 3, 2, 1};          // 插入5个kv
@@ -187,6 +187,9 @@ TEST(BPlusTreeTests, InsertTest3) {
     EXPECT_EQ(location.GetSlotNum(), current_key);
     current_key = current_key + 1;
   }
+
+  printf("测试 tree.Begin()\n");
+  auto iterator = tree.Begin();
 
   bpm->UnpinPage(HEADER_PAGE_ID, true);
   delete transaction;

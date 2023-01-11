@@ -22,6 +22,7 @@
 namespace bustub {
 /**
  * IndexScanPlanNode identifies a table that should be scanned with an optional predicate.
+ * 指示了一个表, 该表应该被扫表
  */
 class IndexScanPlanNode : public AbstractPlanNode {
  public:
@@ -46,7 +47,7 @@ class IndexScanPlanNode : public AbstractPlanNode {
   }
 
  private:
-  /** The table whose tuples should be scanned. */
+  /** The table whose tuples should be scanned. */   // 该表的 tuples 应该被扫描
   index_oid_t index_oid_;
 };
 

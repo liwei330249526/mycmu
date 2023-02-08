@@ -31,8 +31,8 @@ void IndexScanExecutor::Init() {
     tInfo = clog->GetTable(idInfo->table_name_);
     tHeap_ = tInfo->table_.get();
     tree_ = dynamic_cast<BPlusTreeIndexForOneIntegerColumn *>(idInfo->index_.get());
-    indexIter_ = tree_->GetBeginIterator();                               // 获取迭代器
-
+    indexIter_ = tree_->GetBeginIterator();   // 获取迭代器; init函数就做了两件事, 1 获取 TableHeap; 为了获取 tuple; , 2 获取
+                           //tree_ b+ 树,  b+ 树中是存在着我们的索引能够快速查找key:val, 其中val 貌似是 rid; 然后用 TableHeap 获取tuple 
     //IndexIterator(int index, B_PLUS_TREE_LEAF_PAGE_TYPE *page, BufferPoolManager *bpm)
     //bpm = exec_ctx->GetBufferPoolManager();
     //firstPage = reinterpret_cast<BPlusTree<BPlusTreePage<GenericKey<8>, RID, GenericComparator<8>> *>(bpm->FetchPage(tHeap->GetFirstPageId());)
@@ -45,9 +45,9 @@ auto IndexScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {      // 这俩参
     printf("IndexScanExecutor::Next start\n");
     if (indexIter_ != tree_->GetEndIterator()) {                    // 不等于结束的话, 可以查询出
         // 从indexIter 获取 tuple 和 rid
-        IntegerValueType ridb = (*indexIter_).second;                        // 返回的是 rid
+        IntegerValueType ridb = (*indexIter_).second;              // 返回的是 rid
 
-        tHeap_->GetTuple(ridb, tuple, GetExecutorContext()->GetTransaction());
+        tHeap_->GetTuple(ridb, tuple, GetExecutorContext()->GetTransaction());      // TableHeap 获取tupple
         *rid = ridb;
         printf("IndexScanExecutor::Next done ok\n");
         return true;

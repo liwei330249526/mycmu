@@ -83,10 +83,13 @@ class AggregationPlanNode : public AbstractPlanNode {
 
  private:
   /** The GROUP BY expressions */
+  // group 
   std::vector<AbstractExpressionRef> group_bys_;
   /** The aggregation expressions */
+  // 聚合表达式
   std::vector<AbstractExpressionRef> aggregates_;
   /** The aggregation types */
+  // 聚合类型
   std::vector<AggregationType> agg_types_;
 
  protected:
@@ -114,8 +117,8 @@ struct AggregateKey {
 };
 
 /** AggregateValue represents a value for each of the running aggregates */
-struct AggregateValue {
   /** The aggregate values */
+struct AggregateValue {
   std::vector<Value> aggregates_;
 };
 

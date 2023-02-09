@@ -35,10 +35,10 @@ void InsertExecutor::Init() {
   printf("InsertExecutor::Init() start\n");
   ctx = GetExecutorContext();
   // bpm = ctx->GetBufferPoolManager();
-  tableId = plan_->TableOid();
-  clog = ctx->GetCatalog();
-  tinf = clog->GetTable(tableId);
-  thp_ = tinf->table_.get();  // 获取  TableHeap 结构指针, 即存储接口
+  tableId = plan_->TableOid();    // 表id
+  clog = ctx->GetCatalog();       // 目录
+  tinf = clog->GetTable(tableId); // 表信息
+  thp_ = tinf->table_.get();  // 表堆, 获取  TableHeap 结构指针, 即存储接口
 
   indexes_ = clog->GetTableIndexes(tinf->name_);  // 所有 index, 为了向b+树中插入KV
 

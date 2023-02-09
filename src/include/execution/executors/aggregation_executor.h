@@ -30,6 +30,7 @@ namespace bustub {
 
 /**
  * A simplified hash table that has all the necessary functionality for aggregations.
+ * 具有聚合所需的所有功能的简化哈希表。
  */
 class SimpleAggregationHashTable {
  public:
@@ -43,6 +44,7 @@ class SimpleAggregationHashTable {
       : agg_exprs_{agg_exprs}, agg_types_{agg_types} {}
 
   /** @return The initial aggregrate value for this aggregation executor */
+  // GenerateInitialAggregateValue 函数改造
   auto GenerateInitialAggregateValue() -> AggregateValue {
     std::vector<Value> values{};
     for (const auto &agg_type : agg_types_) {
@@ -53,10 +55,15 @@ class SimpleAggregationHashTable {
           break;
         case AggregationType::CountAggregate:
         case AggregationType::SumAggregate:
+          values.emplace_back(ValueFactory::GetIntegerValue(0));        // 计数, 求和, 初始化为0
+          break;
         case AggregationType::MinAggregate:
+          values.emplace_back(ValueFactory::GetIntegerValue(BUSTUB_INT32_MAX)); // 求最小值, 则初始化最大值
+          break;
         case AggregationType::MaxAggregate:
           // Others starts at null.
-          values.emplace_back(ValueFactory::GetNullValueByType(TypeId::INTEGER));
+          values.emplace_back(ValueFactory::GetIntegerValue(BUSTUB_INT32_MIN)); // 求最大值, 则初始化最小值
+          //values.emplace_back(ValueFactory::GetNullValueByType(TypeId::INTEGER));
           break;
       }
     }
@@ -69,24 +76,45 @@ class SimpleAggregationHashTable {
    * Combines the input into the aggregation result.
    * @param[out] result The output aggregate value
    * @param input The input value
+   * 将input 聚合到 result
    */
   void CombineAggregateValues(AggregateValue *result, const AggregateValue &input) {
     for (uint32_t i = 0; i < agg_exprs_.size(); i++) {
       switch (agg_types_[i]) {
         case AggregationType::CountStarAggregate:
+          printf("CountStarAggregate\n");
+          result->aggregates_[i] = result->aggregates_[i].Add(ValueFactory::GetIntegerValue(1));   // 计数怎么样
+          break;
         case AggregationType::CountAggregate:
+          printf("CountAggregate\n");
+          result->aggregates_[i] = result->aggregates_[i].Add(ValueFactory::GetIntegerValue(1));   // 计数增加
+          break;
         case AggregationType::SumAggregate:
+          printf("SumAggregate\n");
+          result->aggregates_[i] = result->aggregates_[i].Add(input.aggregates_[i]);   // 增加sum
+          break;
         case AggregationType::MinAggregate:
+          printf("MinAggregate\n");
+          result->aggregates_[i] = result->aggregates_[i].Min(input.aggregates_[i]);
+          break;
         case AggregationType::MaxAggregate:
+          printf("MaxAggregate\n");
+          std::cout<< "befor result:" <<result->aggregates_[i].ToString() <<std::endl;
+          std::cout<< "befor input:" << input.aggregates_[i].ToString() <<std::endl;
+          result->aggregates_[i] = result->aggregates_[i].Max(input.aggregates_[i]);
+          std::cout<< "after result:" <<result->aggregates_[i].ToString() <<std::endl;
+          std::cout<< "after input:" <<input.aggregates_[i].ToString() <<std::endl;
           break;
       }
     }
+
   }
 
   /**
    * Inserts a value into the hash table and then combines it with the current aggregation.
    * @param agg_key the key to be inserted
    * @param agg_val the value to be inserted
+   * 将值插入哈希表，然后将其与当前聚合组合
    */
   void InsertCombine(const AggregateKey &agg_key, const AggregateValue &agg_val) {
     if (ht_.count(agg_key) == 0) {
@@ -139,8 +167,10 @@ class SimpleAggregationHashTable {
   /** The hash table is just a map from aggregate keys to aggregate values */
   std::unordered_map<AggregateKey, AggregateValue> ht_{};
   /** The aggregate expressions that we have */
+  // 聚合表达式
   const std::vector<AbstractExpressionRef> &agg_exprs_;
   /** The types of aggregations that we have */
+  // 聚合类型
   const std::vector<AggregationType> &agg_types_;
 };
 
@@ -176,6 +206,8 @@ class AggregationExecutor : public AbstractExecutor {
   /** Do not use or remove this function, otherwise you will get zero points. */
   auto GetChildExecutor() const -> const AbstractExecutor *;
 
+  auto GenerateOutput() -> Tuple;
+
  private:
   /** @return The tuple as an AggregateKey */
   auto MakeAggregateKey(const Tuple *tuple) -> AggregateKey {
@@ -201,8 +233,8 @@ class AggregationExecutor : public AbstractExecutor {
   /** The child executor that produces tuples over which the aggregation is computed */
   std::unique_ptr<AbstractExecutor> child_;
   /** Simple aggregation hash table */
-  // TODO(Student): Uncomment SimpleAggregationHashTable aht_;
+  SimpleAggregationHashTable aht_;
   /** Simple aggregation hash table iterator */
-  // TODO(Student): Uncomment SimpleAggregationHashTable::Iterator aht_iterator_;
+  SimpleAggregationHashTable::Iterator aht_iterator_;
 };
 }  // namespace bustub

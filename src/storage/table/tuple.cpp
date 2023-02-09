@@ -25,6 +25,9 @@ namespace bustub {
       //    new Type(TypeId::INVALID),        new BooleanType(), new TinyintType(), new SmallintType(),
       //    new IntegerType(TypeId::INTEGER), new BigintType(),  new DecimalType(), new VarlenType(TypeId::VARCHAR),
 Tuple::Tuple(std::vector<Value> values, const Schema *schema) : allocated_(true) {
+  if (values.size() != schema->GetColumnCount()) {
+      std::cout << "values.size()="<< values.size() << "  schema->GetColumnCount()=" << schema->GetColumnCount() << std::endl;
+  }
   assert(values.size() == schema->GetColumnCount());
 
   // 1. Calculate the size of the tuple.

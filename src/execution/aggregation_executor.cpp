@@ -26,7 +26,7 @@ AggregationExecutor::AggregationExecutor(ExecutorContext *exec_ctx, const Aggreg
 /*
 因此，Aggregation 需要在 Init() 中直接计算出全部结果，将结果暂存，再在 Next() 中一条一条地 emit
 */
-/*
+
 void AggregationExecutor::Init() {
     // 从子计划中获取值, 计算, 计算后存在hash中, next 发出值
     Tuple tuple;
@@ -55,24 +55,22 @@ auto AggregationExecutor::Next(Tuple *tuple, RID *rid) -> bool {
     if (plan_->GetAggregates().size() == 0) {
         return child_->Next(tuple, rid);
     }
-    const Schema schema = GetOutputSchema();
+    const Schema schema  = GetOutputSchema();
+    //const Schema schema = plan_->InferAggSchema(plan_->GetGroupBys(), plan_->GetAggregates(), plan_->GetAggregateTypes());
 
     if (aht_iterator_ != aht_.End()) {                // 未结束, 返回true
-        printf("获取1\n");
         // 将key , val 组合成tuple , 传出, 判断是否可以传出
-
-        printf("获取2\n");
         values = aht_iterator_.Val().aggregates_;
-        keys = aht_iterator_.Key().group_bys_;
         *tuple = Tuple(values, &schema);
-        printf("获取3\n");
         ++aht_iterator_;
+        printf("AggregationExecutor::Next true\n");
+        return true;
     }
-    printf("AggregationExecutor::Next done\n");
+    printf("AggregationExecutor::Next false\n");
     return false;                                           // 结束, 返回false
 }
-*/
 
+/*
 
 void AggregationExecutor::Init() {
     printf("AggregationExecutor::Init\n");
@@ -109,7 +107,7 @@ auto AggregationExecutor::Next(Tuple *tuple, RID *rid) -> bool {
         return child_->Next(tuple, rid);
     } 
     
-}
+}*/
 
 auto AggregationExecutor::GetChildExecutor() const -> const AbstractExecutor * { return child_.get(); }
 
